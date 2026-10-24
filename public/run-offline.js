@@ -1,6 +1,8 @@
 // Standalone presentation adapter. Runs only inside the generated preview file.
 // It never calls an AI provider or claims to produce real-video detections.
 import { guideToTarget, unprojectToWorld } from '../lib/spatial/geometry.mjs';
+import { voiceIntent, nextChecklistTarget } from '../lib/voice-intent.mjs';
+import { validateRecording, recordingFrame } from '../lib/recording.mjs';
 
 export class OfflineRun {
   constructor(fixture, storage = null) {
@@ -9,14 +11,16 @@ export class OfflineRun {
     if (!this.data) this.start({ mode: 'demo', filename: 'PocketRecall · 合成第一视角录像' });
   }
   persist() { try { this.storage?.setItem('pocketrecall-preview-v3', JSON.stringify(this.data)); this.saved = Boolean(this.storage); } catch { this.saved = false; } }
-  start({ mode = 'demo', filename = '' }) {
-    this.data = { session: { id: crypto.randomUUID().replaceAll('-', ''), mode, filename, createdAt: new Date().toISOString(), lastSeq: 0, lastVideoTime: -1 }, objects: [
+  start({ mode = 'demo', filename = '', recording }) {
+    if (!['demo', 'video', 'recording'].includes(mode)) throw new Error('未知回放模式。');
+    const pack = mode === 'recording' ? validateRecording(recording || this.data?.recordingPack) : null;
+    this.data = { session: { id: crypto.randomUUID().replaceAll('-', ''), mode, filename: pack?.video.name || filename, createdAt: new Date().toISOString(), lastSeq: 0, lastVideoTime: -1 }, objects: (pack?.entities || [
       { id: 'keys', label: '钥匙', aliases: ['钥匙', 'keys', 'key'], priority: 'explicit' }, { id: 'wallet', label: '钱包', aliases: ['钱包', 'wallet'], priority: 'explicit' }, { id: 'earbuds', label: '耳机', aliases: ['耳机', 'earbuds', 'airpods'], priority: 'explicit' }, { id: 'phone', label: '手机', aliases: ['手机', 'phone'], priority: 'background' },
-    ].map(o => ({ ...o, lastSeen: null, latestCheck: null, observationCount: 0 })), observations: [], poses: [], events: [], frameCount: 0, map: null, targetId: null, simulatedPose: null };
+    ]).map(o => ({ ...o, lastSeen: null, latestCheck: null, observationCount: 0 })), observations: [], poses: [], events: [], frameCount: 0, map: pack ? { id: pack.mapId, units: pack.coordinateUnits, source: `dataset_annotations:${pack.source.dataset}`, synthetic: false, reference: true, points: pack.points, poses: [], frameCount: 0 } : null, maps: [], targetId: null, simulatedPose: null, recordingPack: pack };
     this.persist(); return this.state();
   }
   event(type, text) { this.data.events.push({ id: String(++this.counter), at: new Date().toISOString(), type, text }); this.data.events = this.data.events.slice(-60); }
-  state() { return structuredClone({ ...this.data, observations: undefined, observationCount: this.data.observations.length, poseCount: this.data.poses.length, guidance: this.guidance(), reconstruction: null, storage: { durable: this.saved, engine: 'browser_localStorage', preview: true } }); }
+  state() { const { observations, recordingPack, ...data } = this.data; return structuredClone({ ...data, recording: recordingPack ? { source: recordingPack.source, frameTimes: recordingPack.frames.map(f => f.videoTime), video: recordingPack.video } : null, observationCount: observations.length, poseCount: this.data.poses.length, guidance: this.guidance(), reconstruction: null, storage: { durable: this.saved, engine: 'browser_localStorage', preview: true } }); }
   guidance() {
     const object = this.data.objects.find(o => o.id === this.data.targetId); if (!object) return null;
     const raw = guideToTarget({ target: object.lastSeen, pose: this.data.simulatedPose });
@@ -24,43 +28,73 @@ export class OfflineRun {
     let instruction = '还没有可用空间位置，请先观察视频。';
     if (active) instruction = Math.abs(raw.bearingDeg) >= 12 ? `向${raw.bearingDeg > 0 ? '右' : '左'}转动视角约 ${Math.round(Math.abs(raw.bearingDeg))}°。` : Math.abs(raw.elevationDeg) >= 15 ? `稍微${raw.elevationDeg > 0 ? '抬头' : '低头'}。` : '方向正确，目标最后出现的位置就在前方。';
     if (active && raw.distanceM < .3) instruction = '已接近记忆位置，请查看图像并确认物体。';
-    return { ...raw, label: object.label, targetId: object.id, aligned, instruction, synthetic: true, simulatedUser: true, coordinateUnits: 'meters', confirmed: false, videoConfirmed: Boolean(object.latestCheck?.status === 'seen' && this.data.searchAfterSeq != null && this.data.session.lastSeq > this.data.searchAfterSeq), pulse: { enabled: active, gain: active ? Math.max(.025, Math.min(.45, .22 / Math.max(.2, raw.distanceM))) : 0, intervalMs: active ? Math.max(400, Math.min(1700, 350 + raw.distanceM * 220)) : 0 }, haptic: aligned ? [25] : [] };
+    const metric = this.data.map?.units === 'meters';
+    return { ...raw, distanceM: metric ? raw.distanceM : null, distanceRelative: metric ? null : raw.distanceM, label: object.label, targetId: object.id, aligned, instruction, synthetic: this.data.session.mode === 'demo', simulatedUser: true, coordinateUnits: metric ? 'meters' : 'relative', confirmed: false, videoConfirmed: Boolean(object.latestCheck?.status === 'seen' && this.data.searchAfterSeq != null && object.latestCheck.frameId !== this.data.searchAfterFrameId && this.data.session.lastSeq > this.data.searchAfterSeq), pulse: { enabled: active, gain: active ? Math.max(.025, Math.min(.45, .22 / Math.max(.2, raw.distanceM))) : 0, intervalMs: active ? Math.max(400, Math.min(1700, 350 + raw.distanceM * 220)) : 0 }, haptic: aligned ? [25] : [] };
   }
   async frame(body) {
     const session = this.data;
-    if (this.data.session.mode !== 'demo') throw new Error('离线预览只处理合成录像。真实视频请运行项目服务后打开 /run。');
-    if (body.videoTime <= this.data.session.lastVideoTime || body.seq <= this.data.session.lastSeq) throw Object.assign(new Error('跳过已处理的视频帧。'), { status: 409 });
-    if (this.data.frameCount >= 40) throw new Error('离线预览最多保存 40 个抽样帧，请重新分析。');
-    const sample = this.fixture.frames.reduce((a, b) => Math.abs(a.time - body.videoTime) < Math.abs(b.time - body.videoTime) ? a : b);
-    const capturedAt = new Date(Date.parse(this.data.session.createdAt) + body.videoTime * 1000).toISOString();
-    const pose = { ...sample.pose, id: `preview_pose_${body.seq}`, capturedAt }; this.data.poses.push(pose);
+    const recorded = this.data.session.mode === 'recording', pack = this.data.recordingPack;
+    if (!recorded && this.data.session.mode !== 'demo') throw new Error('离线预览只处理合成录像或导入的数据集标注。真实视频识别请运行项目服务后打开 /run。');
+    if (!Number.isFinite(body.videoTime) || !Number.isSafeInteger(body.seq) || body.videoTime < 0 || body.videoTime <= this.data.session.lastVideoTime || body.seq <= this.data.session.lastSeq) throw Object.assign(new Error('跳过已处理或无效的视频帧。'), { status: 409 });
+    if (this.data.frameCount >= 180) throw new Error('离线预览最多保存 180 个抽样帧，请重新分析。');
+    const sample = recorded ? recordingFrame(pack, body.videoTime) : this.fixture.frames.reduce((a, b) => Math.abs(a.time - body.videoTime) < Math.abs(b.time - body.videoTime) ? a : b);
+    if (recorded && (this.data.annotationTimes || []).includes(sample.videoTime)) throw Object.assign(new Error('此标注帧已处理。'), { status: 409 });
+    const capturedAt = new Date(Date.parse(this.data.session.createdAt) + (recorded ? sample.videoTime : body.videoTime) * 1000).toISOString();
+    const pose = { ...(recorded ? { worldFromCamera: sample.worldFromCamera, trackingState: 'tracking', mapId: pack.mapId } : sample.pose), id: `preview_pose_${body.seq}`, capturedAt };
     const bytes = Uint8Array.from(atob(body.imageDataUrl.split(',')[1]), c => c.charCodeAt(0));
     const hash = crypto.subtle ? Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', bytes)), b => b.toString(16).padStart(2, '0')).join('') : null;
     if (session !== this.data) throw Object.assign(new Error('会话已切换，丢弃旧帧。'), { status: 409 });
+    const imagePath = `browser:${hash || `frame-${body.seq}`}`;
+    this.data.evidence ||= {};
+    this.data.evidence[imagePath] = { sha256: hash, dataUrl: body.imageDataUrl };
+    this.data.poses.push(pose);
     for (const detection of sample.detections) {
       const object = this.data.objects.find(o => o.id === detection.entityId); if (!object) continue;
       const b = detection.bbox;
-      const position = detection.status === 'seen' ? unprojectToWorld({ pixel: [(b[0] + b[2]) / 2 * 518, (b[1] + b[3]) / 2 * 518], depthM: detection.depthM, intrinsics: this.fixture.intrinsics, pose }) : null;
-      const record = { id: `preview_${body.seq}_${object.id}`, entityId: object.id, capturedAt, frameId: `preview_${body.seq}`, source: 'passive', status: detection.status, position, coordinateUnits: 'meters', mapId: 'demo-room', method: position ? 'depth' : 'unlocalized', poseRef: pose.id, evidence: { imagePath: `browser:frame-${body.seq}`, crop: b, synthetic: true, sha256: hash }, semantics: detection.semantics };
+      const position = detection.status === 'seen' ? recorded ? [...detection.worldPosition] : unprojectToWorld({ pixel: [(b[0] + b[2]) / 2 * 518, (b[1] + b[3]) / 2 * 518], depthM: detection.depthM, intrinsics: this.fixture.intrinsics, pose }) : null;
+      const record = { id: `preview_${body.seq}_${object.id}`, entityId: object.id, capturedAt, frameId: `preview_${body.seq}`, source: 'passive', status: detection.status, position, coordinateUnits: recorded ? pack.coordinateUnits : 'meters', mapId: pose.mapId, method: position ? recorded ? 'annotation' : 'depth' : 'unlocalized', poseRef: pose.id, evidence: { imagePath, crop: b ?? null, synthetic: !recorded, sha256: hash }, semantics: detection.semantics };
       object.latestCheck = record; object.observationCount++; this.data.observations.push(record);
       if (detection.status === 'seen') { object.lastSeen = record; object.evidenceUrl = body.imageDataUrl; }
     }
+    if (recorded) { this.data.annotationTimes ||= []; this.data.annotationTimes.push(sample.videoTime); }
     this.data.frameCount++; this.data.session.lastSeq = body.seq; this.data.session.lastVideoTime = body.videoTime;
-    this.data.map = { id: 'demo-room', source: 'synthetic_fixture', synthetic: true, units: 'meters', points: this.fixture.points, poses: this.data.poses, frameCount: this.data.frameCount };
+    this.data.map = { id: recorded ? pack.mapId : 'demo-room', source: recorded ? `dataset:${pack.source.dataset}` : 'synthetic_fixture', synthetic: !recorded, reference: true, units: recorded ? pack.coordinateUnits : 'meters', points: recorded ? pack.points : this.fixture.points, poses: this.data.poses, frameCount: this.data.frameCount };
+    if (!this.data.maps?.length) {
+      const bytes = new TextEncoder().encode(JSON.stringify(this.data.map.points));
+      const geometryHash = crypto.subtle ? Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', bytes)), b => b.toString(16).padStart(2, '0')).join('') : null;
+      if (session !== this.data) throw Object.assign(new Error('会话已切换，丢弃旧帧。'), { status: 409 });
+      const { id, units, source, synthetic, reference } = this.data.map;
+      this.data.maps = [{ id, units, source, synthetic, reference, currentRevision: geometryHash, revisions: [{ id: geometryHash, sha256: geometryHash, pointCount: this.data.map.points.length, capturedAt, geometryPath: 'browser:map' }] }];
+    }
     if (!this.data.targetId) this.data.simulatedPose = pose;
-    this.event('memory', `帧 ${body.seq} → ${sample.detections.filter(d => d.status === 'seen').length} 个可见道具 → 合成坐标与证据已存储`);
+    this.event('memory', `帧 ${body.seq} → ${sample.detections.filter(d => d.status === 'seen').length} 个可见物体 → ${recorded ? '数据集标注' : '合成'}坐标与证据已存储`);
     this.persist(); return { accepted: true, elapsedMs: 0, detections: sample.detections, state: this.state() };
   }
   query(body) {
-    const text = body.text.toLowerCase(); let message;
-    if (/出发|出门|leav/.test(text)) { const checklist = this.data.objects.filter(o => o.priority === 'explicit'); message = checklist.map(o => `${o.label}：${o.lastSeen ? '有最后出现的图像' : '尚未看到'}`).join('；') + '。请逐件确认已携带。'; this.event('query', text); this.persist(); return { kind: 'departure', checklist, message, state: this.state() }; }
+    const text = body.text.toLowerCase(); let message; const kind = voiceIntent(text);
+    if (['pause', 'resume', 'cancel'].includes(kind)) { if (kind === 'cancel') { this.data.targetId = null; this.data.departureActive = false; } message = kind === 'pause' ? '已暂停。' : kind === 'resume' ? '继续观察。' : '已结束寻找。'; this.persist(); return { kind, message, state: this.state() }; }
+    if (kind === 'confirm') {
+      const object = this.data.objects.find(o => o.aliases.some(a => text.includes(a))) || this.data.objects.find(o => o.id === this.data.targetId);
+      if (!object) return { kind, message: '想确认哪件物体？', state: this.state() };
+      this.data.confirmedIds = [...new Set([...(this.data.confirmedIds || []), object.id])];
+      this.data.userReports ||= []; this.data.userReports.push({ entityId: object.id, source: 'user_report', text: body.text, capturedAt: new Date().toISOString() });
+      const next = this.data.departureActive ? nextChecklistTarget(this.data.objects, this.data.confirmedIds) : null;
+      this.data.targetId = next?.id ?? null; this.data.searchAfterSeq = this.data.session.lastSeq;
+      this.data.searchAfterFrameId = next?.latestCheck?.frameId ?? null;
+      if (next) this.data.simulatedPose = structuredClone(this.data.poses.at(-1));
+      message = `${object.label}已由你确认。` + (next ? `接着找${next.label}。${this.guidance()?.instruction || ''}` : '寻找完成。');
+      this.event('user_confirmed', message); this.persist(); return { kind, message, confirmedBy: 'user_report', checklist: this.data.departureActive ? this.data.objects.filter(o => o.priority === 'explicit').map(o => ({ ...o, confirmedByUser: this.data.confirmedIds.includes(o.id) })) : undefined, state: this.state() };
+    }
+    if (kind === 'next') { const next = nextChecklistTarget(this.data.objects, this.data.confirmedIds || []); return next ? this.query({ ...body, text: `找${next.label}` }) : { message: '清单已完成。', state: this.state() }; }
+    if (kind === 'departure') { this.data.departureActive = true; this.data.confirmedIds = []; const checklist = this.data.objects.filter(o => o.priority === 'explicit'); const next = nextChecklistTarget(this.data.objects); this.data.targetId = next?.id ?? null; this.data.searchAfterSeq = this.data.session.lastSeq; this.data.searchAfterFrameId = next?.latestCheck?.frameId ?? null; this.data.simulatedPose = structuredClone(this.data.poses.at(-1)); message = `出门前确认${checklist.map(o => o.label).join('、')}。${next ? '先找' + next.label + '。' + this.guidance()?.instruction : ''}拿到后说“拿到了”。`; this.event('query', text); this.persist(); return { kind: 'departure', checklist, message, state: this.state() }; }
     const object = this.data.objects.find(o => o.aliases.some(a => text.includes(a)));
     this.data.targetId = object?.id ?? null;
     this.data.searchAfterSeq = this.data.session.lastSeq;
+    this.data.searchAfterFrameId = object?.latestCheck?.frameId ?? null;
     if (!object) message = '尚未记住这个物体。';
     else if (!object.lastSeen) message = `还没有看到${object.label}。`;
     else { this.data.simulatedPose = structuredClone(this.data.poses.at(-1)); message = `找到${object.label}的记忆了。${this.guidance().instruction}`; }
-    this.event('query', body.text); this.event('answer', message); this.persist(); return { message, state: this.state() };
+    this.event('query', body.text); this.event('answer', message); this.persist(); return { kind, message, state: this.state() };
   }
   move({ action }) {
     let pose = structuredClone(this.data.simulatedPose); if (!pose) throw new Error('请先选择一个目标。');
@@ -80,6 +114,11 @@ export class OfflineRun {
     if (route === 'state' || route === 'reconstruction') return this.state();
     if (route === 'session') return this.start(body);
     if (body?.sessionId !== this.data.session.id && route !== 'export') throw new Error('会话已切换。');
+    if (route === 'recording') {
+      const pack = validateRecording(body.recording), video = body.video;
+      if (!video || video.name !== pack.video.name || video.width !== pack.video.width || video.height !== pack.video.height || !Number.isFinite(video.duration) || Math.abs(video.duration - pack.video.duration) > .15) throw new Error('标注包的视频名称、尺寸或时长与已上传视频不一致。');
+      return this.start({ mode: 'recording', recording: pack });
+    }
     if (route === 'frame') return this.frame(body);
     if (route === 'query') return this.query(body);
     if (route === 'move') return this.move(body);
@@ -87,7 +126,10 @@ export class OfflineRun {
       if (!body.label?.trim() || body.label.length > 60 || this.data.objects.length >= 12) throw new Error('物体名称无效，或已到 12 类物体上限。');
       this.data.objects.push({ id: `custom_${Date.now()}`, label: body.label.trim(), aliases: [body.label.trim()], priority: 'explicit', lastSeen: null, observationCount: 0 }); this.persist(); return this.state();
     }
-    if (route === 'export') return { schemaVersion: 3, preview: true, session: this.data, memory: { entities: this.data.objects.map(({ lastSeen, latestCheck, evidenceUrl, ...o }) => o), observations: this.data.observations, poses: this.data.poses } };
+    if (route === 'export') {
+      const { recordingPack, ...session } = this.data;
+      return { schemaVersion: 3, preview: true, session, memory: { entities: this.data.objects.map(({ lastSeen, latestCheck, evidenceUrl, ...o }) => o), observations: this.data.observations, poses: this.data.poses, maps: this.data.maps || [], userReports: this.data.userReports || [] } };
+    }
     throw new Error('这是离线交互预览。真实视频识别和 VGGT 请运行项目服务。');
   }
 }

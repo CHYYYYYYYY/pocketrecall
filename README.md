@@ -10,10 +10,13 @@ Built for c0mpiled-16 UCSD / No App. Daily queries are voice-driven after a one-
 
 - Upload a browser-playable MP4/MOV/WebM. It stays in the browser; square-letterboxed JPEG keyframes are sent to the local server, recognized by Gemini and stored with their original video timestamps.
 - Inspect object evidence, immutable observations, camera poses and exported JSON. Ask by text or browser speech, including “帮我找钥匙” and “我要出发了”.
+- 3D maps are stored separately as hashed geometry with a durable revision index. Object histories bind coordinates to map IDs, frame timestamps and evidence. Search by name, map, historical time or radius; memory and maps recover after a process restart. See [3D memory and dataset input](docs/SPATIAL_MEMORY.md).
+- **无屏体验** provides a focused voice flow: ask for an item, follow sound/haptic cues, say “拿到了”, and advance through the departure checklist. Explicit user confirmations remain separate from visual evidence.
+- Import a calibrated annotation package beside a video to replay dataset-provided 3D locations without an API call. `scripts/convert-hd-epic.mjs` adapts official association/mask JSON plus normalized camera poses; actual HD-EPIC data is not bundled.
 - Use arrow keys/WASD or buttons to simulate a wearer. Voice gives direction, alignment triggers a short haptic or screen animation, and a two-beat sound grows louder with proximity. Click **开启声音** first.
 - Optional `FAL_KEY` enables `fal-ai/vggt-1b`: 2–8 keyframes per asynchronous reconstruction. Auto-update submits after every six accepted frames when no job is active. Each batch has its own map; batches are not silently fused. Uncalibrated reconstructions use **relative units**, never meters.
 - A bundled 24-second **synthetic** video exercises movement, occlusion and reacquisition without credentials. Its detections/depth/poses are explicit fixtures; storage, queries and spatial guidance execute normally.
-- `npm run preview:build` produces `public/pocketrecall-preview.html`: a single-file, offline interaction preview with browser storage and synthetic inputs. It contains no API keys. Uploaded real videos require the Node server and configured providers.
+- `npm run preview:build` produces `public/pocketrecall-preview.html`: a single-file interaction preview with browser storage, synthetic input and annotation replay. It contains no API keys. AI recognition/reconstruction of uploaded real videos requires the Node server and configured providers.
 
 See [Run console details](docs/RUN_DEMO.md) and [how HD-EPIC / EgoRecall support the hackathon](docs/HACKATHON_DATA.md).
 

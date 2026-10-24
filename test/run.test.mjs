@@ -82,6 +82,34 @@ test('RGB-only video stores evidence and semantics but cannot invent 3D directio
   await assert.rejects(run.build({ sessionId: run.session.id }), /FAL_KEY/);
 });
 
+test('voice departure confirms items explicitly and advances without overwriting visual memory', async t => {
+  const { run, frame } = runFixture(t); await frame(9);
+  const query = text => run.query({ sessionId: run.session.id, text });
+  const before = run.pipeline.store.snapshot().observations;
+  query('我要出发了');
+  const first = run.session.targetId; assert.ok(first);
+  assert.equal(query('暂停').kind, 'pause'); assert.equal(query('继续').kind, 'resume');
+  const confirmation = query('拿到了');
+  assert.equal(confirmation.confirmedBy, 'user_report');
+  assert.ok(run.session.confirmedIds.includes(first)); assert.notEqual(run.session.targetId, first);
+  query('拿到了'); const completed = query('拿到了');
+  assert.match(completed.message, /逐件确认/); assert.equal(run.session.targetId, null);
+  assert.equal(run.pipeline.store.snapshot().userReports.length, 3);
+  assert.deepEqual(run.pipeline.store.snapshot().observations, before);
+  assert.equal(query('取消寻找').state.guidance, null);
+});
+
+test('unrelated or ambiguous later video frames cannot reconfirm the target', async t => {
+  let detections = seen;
+  const { run, frame } = runFixture(t, { vision: { configured: true, analyze: async () => detections } });
+  run.start({ mode: 'video' }); await frame(0, 5);
+  run.query({ sessionId: run.session.id, text: '找钥匙' });
+  detections = []; await frame(2, 8);
+  assert.equal(run.guidance().videoConfirmed, false);
+  detections = seen; await frame(4, 11);
+  assert.equal(run.guidance().videoConfirmed, true);
+});
+
 test('VGGT response aligns per-frame boxes and poses, persists a relative map, and never labels unscaled distances as meters', async t => {
   const e = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0]], k = [[300, 0, 259], [0, 300, 259], [0, 0, 1]];
   const { run, frame } = runFixture(t, { vision: { configured: true, model: 'test', analyze: async () => seen }, reconstruction: {

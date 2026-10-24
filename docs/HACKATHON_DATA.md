@@ -49,4 +49,17 @@ Both HD-EPIC data and EgoRecall annotations are published with noncommercial con
 
 ## Current integration status
 
-The console, synthetic replay, Gemini frame adapter and optional VGGT adapter are implemented. **Neither HD-EPIC nor EgoRecall has been downloaded or integrated.** This task environment cannot resolve external hosts. Dataset support still needs the actual selected bundle, camera convention verification, a metadata importer, and replay alignment validation. The current public sample link is a separate VGGT room clip, not HD-EPIC.
+The console, persistent 3D map/object store, synthetic replay, Gemini frame adapter and optional VGGT adapter are implemented. A dataset replay importer now consumes calibrated world positions and frame-aligned camera poses, and the HD-EPIC association/mask converter is covered by schema-fixture tests. **No actual HD-EPIC or EgoRecall recording is bundled or validated here.** This task environment cannot resolve external hosts from the runtime. Real data integration still needs the selected video/annotations and verified optical camera calibration. The current public sample link is a separate VGGT room clip, not HD-EPIC.
+
+Convert a selected HD-EPIC clip with:
+
+```sh
+node scripts/convert-hd-epic.mjs \
+  --associations assoc_info.json --masks mask_info.json \
+  --geometry calibrated-clip.json --video-id VIDEO_ID \
+  --objects ASSOCIATION_ID,ASSOCIATION_ID --out recording.json
+```
+
+`calibrated-clip.json` supplies `mapId`, `coordinateUnits:"meters"`, `cameraConvention:"opencv_optical"`, `bboxUnits:"pixels"` or `"normalized"`, `video:{name,width,height,duration,fps,startFrame}`, `poses:[{frameNumber,worldFromCamera}]` and optional `points:[[x,y,z,"#rrggbb"]]`. Frame numbers are the official source frame numbers; `startFrame` converts them into time within the clipped video. Camera matrices must be row-major 4×4, with optical camera X right / Y down / Z forward. Compose the official sensor/device transforms first; the converter deliberately rejects missing calibration instead of guessing it.
+
+Load the clip in `/run`, then import `recording.json`. The player pauses/seeks to the annotated timestamp before capturing its evidence. The same association ID persists across movements, boxes are converted into square-letterboxed image coordinates, and no observation appears before its annotated time. Sparse endpoint annotations do not assert absence on other frames. A supplied full point cloud is labeled a precomputed reference map. See [the input contract](SPATIAL_MEMORY.md).

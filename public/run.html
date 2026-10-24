@@ -22,12 +22,12 @@
   <symbol id="i-buds" viewBox="0 0 24 24"><rect x="3" y="9" width="18" height="12" rx="5"/><path d="M3 14h18M6 6V3h3v5m6 0V3h3v3"/></symbol>
   <symbol id="i-phone" viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M10 5h4m-3 14h2"/></symbol>
 </defs></svg>
-<header class="topbar">
+<header class="topbar" id="app-header">
   <a class="brand" href="/run" aria-label="PocketRecall 首页"><span class="brand-mark"><i></i><i></i><i></i><i></i></span>Pocket<span>Recall</span><b>LAB</b></a>
   <nav aria-label="主导航"><button class="nav-active" id="nav-run">Run <span>01</span></button><button id="nav-memory">Memory <span>02</span></button><button id="nav-about">How it works <span>03</span></button></nav>
-  <div class="top-actions"><span class="connection" id="connection"><i></i> LOCAL SESSION</span><button class="icon-button" id="fullscreen" aria-label="全屏演示"><svg><use href="#i-expand"/></svg></button></div>
+  <div class="top-actions"><button class="button light" id="enter-invisible"><svg><use href="#i-sound"/></svg>无屏体验</button><span class="connection" id="connection"><i></i> LOCAL SESSION</span><button class="icon-button" id="fullscreen" aria-label="全屏演示"><svg><use href="#i-expand"/></svg></button></div>
 </header>
-<main>
+<main id="app-main">
   <section class="heading">
     <div><p class="eyebrow"><span></span> SEE IT. REMEMBER IT. FIND IT.</p><h1>你的记忆，<em>有了空间。</em></h1><p class="intro">一段第一视角，从看见到找回。眼镜的能力，在这里发生。</p></div>
     <div class="session-card"><span class="mono">SESSION / <b id="session-short">—</b></span><span id="mode-badge" class="pill amber">合成录像 · 端到端模拟</span></div>
@@ -35,7 +35,7 @@
 
   <section class="sourcebar" aria-label="视频来源">
     <div class="source-title"><span class="source-dot"></span><div><b id="source-name">PocketRecall · 第一视角演示</b><small id="source-caption">合成视频、检测与空间坐标；实际执行记忆存储和查询</small></div></div>
-    <div class="source-actions"><button id="sample-button" class="button quiet">内置演示</button><button id="public-sample" class="button quiet">公开室内视频 ↗</button><button id="upload-button" class="button light"><svg><use href="#i-upload"/></svg>上传第一视角视频</button><input id="video-file" type="file" accept="video/*,.mp4,.mov,.webm" hidden></div>
+    <div class="source-actions"><button id="sample-button" class="button quiet">内置演示</button><button id="public-sample" class="button quiet">公开视频 ↗</button><button id="recording-button" class="button outline" title="上传匹配视频后，导入 PocketRecall 格式的数据集空间标注 JSON">导入空间标注</button><button id="upload-button" class="button light"><svg><use href="#i-upload"/></svg>上传第一视角视频</button><input id="video-file" type="file" accept="video/*,.mp4,.mov,.webm" hidden><input id="recording-file" type="file" accept="application/json,.json" hidden></div>
   </section>
 
   <section class="pipeline" aria-label="处理流程">
@@ -71,7 +71,8 @@
     <article class="panel memory-panel" id="memory-panel">
       <div class="panel-header"><h2>记住的物体 <span>OBJECT MEMORY</span></h2><button id="add-object" class="button quiet small">＋ 添加物体</button></div>
       <div class="object-grid" id="objects"></div>
-      <div class="storage-strip"><div><i></i><b id="storage-count">0</b> 条观察 · <span id="storage-frames">0</span> 帧证据 · 本机持久保存</div><button id="inspect-storage">查看存储结构 <span>↗</span></button></div>
+      <div class="storage-strip"><div><i></i><b id="storage-count">0</b> 条观察 · <span id="storage-frames">0</span> 帧证据 · <span id="storage-engine">本机持久保存</span></div><button id="inspect-storage">查看存储结构 <span>↗</span></button></div>
+      <p class="memory-proof" id="memory-proof">图像证据先保存，空间坐标随建图补入</p>
       <div class="event-log"><div class="log-heading"><span class="mono">MEMORY TRACE</span><span id="event-status">等待观察</span></div><ol id="events" aria-label="记忆处理记录"></ol></div>
     </article>
 
@@ -89,6 +90,11 @@
   </section>
   <footer><span>POCKETRECALL <i>／</i> A LITTLE LESS LOST.</span><div><span id="api-status">连接服务中</span><button id="open-settings">服务状态 ↗</button><a href="/desk">经典桌面演示 ↗</a></div></footer>
 </main>
+<section id="invisible-view" class="invisible-view" hidden role="dialog" aria-modal="true" aria-label="无屏声音体验">
+  <div class="invisible-top"><span class="brand">Pocket<span>Recall</span></span><button id="exit-invisible" class="button quiet">返回控制台 ↗</button></div>
+  <div class="invisible-center"><p class="eyebrow">LESS SCREEN. MORE PRESENCE.</p><h2>不必看屏幕。<br><em>记忆为你带路。</em></h2><div class="voice-orb" id="voice-orb"><i></i><i></i><i></i><svg><use href="#i-mic"/></svg></div><p id="invisible-status" aria-live="polite">告诉我，你想找什么。</p><p id="invisible-reply">“帮我找钥匙” · “我要出发了”</p><button id="invisible-listen" class="button outline">开始说话</button><button id="invisible-confirm" class="button quiet">拿到了 ✓</button></div>
+  <div class="invisible-bottom"><p>语音给方向 · 对准轻震 · 越近心跳越响</p><small>佩戴者与触觉为模拟。麦克风不可用时，可返回控制台输入。</small><details><summary>模拟佩戴者 · 方向键 / WASD · Q E 抬头低头</summary><div class="sim-controls"><div><button data-move="left">← 左转</button><button data-move="forward">↑ 靠近</button><button data-move="back">↓ 后退</button><button data-move="right">→ 右转</button><button data-move="up">抬头</button><button data-move="down">低头</button></div></div></details></div>
+</section>
 <div id="toast" role="status" hidden></div>
 <dialog id="detail-dialog"><div class="dialog-heading"><h2 id="detail-title">物体记忆</h2><button id="close-detail" aria-label="关闭">✕</button></div><div id="detail-body"></div></dialog>
 <dialog id="add-dialog"><div class="dialog-heading"><h2>让眼镜留意一个物体</h2><button id="close-add" aria-label="关闭">✕</button></div><form id="add-form"><label for="object-name">物体名称</label><input id="object-name" maxlength="60" placeholder="例如：我的水杯" required><p>新名称用于后续真实视频识别；内置合成录像包含固定的四件道具。</p><button class="button light" type="submit">开始记忆</button></form></dialog>

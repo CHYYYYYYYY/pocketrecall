@@ -77,6 +77,9 @@ export function createAppServer({
       if (req.method === 'GET' && url.pathname === '/api/run/state') return sendJson(res, 200, run.state());
       if (req.method === 'GET' && url.pathname === '/api/run/reconstruction') return sendJson(res, 200, await run.poll());
       if (req.method === 'GET' && url.pathname === '/api/run/export') return sendJson(res, 200, run.export());
+      if (req.method === 'GET' && url.pathname === '/api/run/maps') return sendJson(res, 200, { maps: run.pipeline.store.snapshot().maps });
+      if (req.method === 'GET' && url.pathname.startsWith('/api/run/map/')) return sendJson(res, 200, run.map(decodeURIComponent(url.pathname.slice('/api/run/map/'.length)), url.searchParams.get('revision') || undefined));
+      if (req.method === 'GET' && url.pathname.startsWith('/api/run/history/')) return sendJson(res, 200, { observations: run.pipeline.store.history(decodeURIComponent(url.pathname.slice('/api/run/history/'.length))) });
       if (req.method === 'GET' && url.pathname.startsWith('/api/run/evidence/')) {
         const parts = url.pathname.split('/');
         if (parts.length !== 6) throw new VisionError('Evidence not found.', 404);
@@ -100,6 +103,8 @@ export function createAppServer({
       if (req.method === 'POST' && url.pathname.startsWith('/api/')) {
         const body = await readJson(req);
         if (url.pathname === '/api/run/session') return sendJson(res, 200, run.start(body));
+        if (url.pathname === '/api/run/recording') return sendJson(res, 200, run.importRecording(body));
+        if (url.pathname === '/api/run/search') return sendJson(res, 200, run.search(body));
         if (url.pathname === '/api/run/frame') return sendJson(res, 200, await run.ingest(body));
         if (url.pathname === '/api/run/query') return sendJson(res, 200, run.query(body));
         if (url.pathname === '/api/run/register') return sendJson(res, 200, run.register(body));

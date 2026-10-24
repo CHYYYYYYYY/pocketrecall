@@ -218,3 +218,27 @@ test('vision rejects a guessed position for an unseen object', () => {
     earbuds: { status: 'unclear', box_2d: null },
   }), /location to an unseen object/);
 });
+
+test('Run API exposes durable maps, point geometry, object history and time-scoped spatial search', async t => {
+  const app = await fixture(t);
+  const state = (await app.post('/api/run/session', { mode: 'demo' })).body;
+  const sessionId = state.session.id;
+  for (const [i, videoTime] of [0,9,15].entries()) {
+    const response = await app.post('/api/run/frame', { sessionId, seq: i + 1, videoTime, imageDataUrl: PNG });
+    assert.equal(response.status, 200);
+  }
+  const index = await (await app.get('/api/run/maps')).json();
+  assert.equal(index.maps.length, 1); assert.equal(index.maps[0].id, 'demo-room');
+  const map = await (await app.get('/api/run/map/demo-room')).json();
+  assert.ok(map.points.length > 1000); assert.equal(map.poses.length, 3);
+  assert.equal(map.revision.sha256.length, 64);
+  const history = await (await app.get('/api/run/history/keys')).json();
+  assert.equal(history.observations.length, 3); assert.equal(history.observations.at(-1).status, 'not_seen');
+  const result = await app.post('/api/run/search', { sessionId, text: '钥匙', mapId: 'demo-room', near: history.observations[0].position, at: history.observations[0].capturedAt, radius: .01 });
+  assert.equal(result.status, 200); assert.equal(result.body.results.length, 1);
+  assert.equal(result.body.results[0].lastSeen.id, history.observations[0].id);
+  assert.equal(result.body.results[0].distance, 0);
+  assert.equal((await app.post('/api/run/search', { sessionId: 'stale' })).status, 409);
+  const exported = await (await app.get('/api/run/export')).json();
+  assert.equal(exported.maps[0].revision.sha256, map.revision.sha256);
+});

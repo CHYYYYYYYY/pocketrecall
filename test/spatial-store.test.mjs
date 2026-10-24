@@ -136,3 +136,47 @@ test('RGB-only observations and user reports reject timezone-less timestamps', t
   const withOffset = { ...input, capturedAt: '2026-10-24T13:00:01-07:00' };
   assert.equal(store.addObservation(withOffset).capturedAt, '2026-10-24T20:00:01.000Z');
 });
+
+test('map geometry is versioned, deduplicated, verified and recoverable independently of sessions', t => {
+  const { store, dataDir, observation } = fixture(t);
+  const first = [[0, 0, 0, '#ffffff'], [1, 0, 0, '#0099ff']];
+  const map = { id: 'desk', units: 'meters', source: 'test_fixture', synthetic: true, points: first, capturedAt: iso(1) };
+  const one = store.saveMap(map); store.saveMap(map);
+  assert.equal(store.snapshot().maps[0].revisions.length, 1);
+  store.addObservation(observation(1));
+  const two = store.saveMap({ ...map, points: [...first, [2, 0, 0, '#aabbcc']], capturedAt: iso(2) });
+  assert.notEqual(one.currentRevision, two.currentRevision);
+  const restored = new SpatialStore({ dataDir });
+  assert.deepEqual(restored.readMap('desk', { revisionId: one.currentRevision }).points, first);
+  assert.equal(restored.readMap('desk').points.length, 3);
+  assert.equal(restored.query({ entityId: 'blue-keys' }).lastSeen.mapId, 'desk');
+  assert.throws(() => store.saveMap({ ...map, units: 'relative' }), /cannot change/);
+  assert.throws(() => store.saveMap({ ...map, synthetic: false }), /cannot change/);
+  assert.throws(() => store.addObservation(observation(2, { coordinateUnits: 'relative' })), /units disagree/);
+  assert.throws(() => store.addObservation(observation(2, { evidence: { imagePath: 'evidence/frame.svg', crop: [.2,.2,.3,.3], synthetic: false } })), /provenance/);
+  fs.writeFileSync(path.join(dataDir, restored.readMap('desk').revision.geometryPath), '[]');
+  assert.throws(() => restored.readMap('desk'), /checksum mismatch/);
+});
+
+test('spatial search respects map identity, time, radius, movement and occlusion', t => {
+  const { store, observation } = fixture(t);
+  store.saveMap({ id: 'desk', units: 'meters', source: 'test', synthetic: true });
+  store.addObservation(observation(1, { position: [1, 0, 0], coordinateUnits: 'meters' }));
+  store.addObservation(observation(3, { position: [4, 0, 0], coordinateUnits: 'meters' }));
+  store.addObservation(observation(4, { position: null, method: 'unlocalized', status: 'not_seen', uncertaintyM: null, evidence: { imagePath: 'evidence/frame.svg', crop: null, synthetic: true } }));
+  const old = store.search({ text: 'my keys', mapId: 'desk', near: [0, 0, 0], radius: 2, at: iso(2) });
+  assert.equal(old.length, 1); assert.equal(old[0].distance, 1);
+  assert.equal(store.search({ mapId: 'desk', near: [0, 0, 0], radius: 2 }).length, 0);
+  const latest = store.search({ mapId: 'desk', near: [4, 0, 0] })[0];
+  assert.equal(latest.distance, 0); assert.equal(latest.lastSeen.id, 'obs-3');
+  assert.equal(latest.seenInLatestObservation, false); assert.equal(latest.meaning, 'last_seen_search_location');
+  assert.equal(latest.coordinateUnits, 'meters');
+  const another = observation(5, { mapId: 'room2', poseRef: 'room2-pose' });
+  store.recordPose({ id: 'room2-pose', mapId: 'room2', capturedAt: iso(5), worldFromCamera: matrix, trackingState: 'tracking' });
+  store.addObservation(another);
+  assert.equal(store.search({ mapId: 'desk' })[0].lastSeen.id, 'obs-3', 'older maps retain their own history');
+  assert.equal(store.search({})[0].lastSeen.id, 'obs-5');
+  assert.equal(store.search({ at: iso(0) }).length, 0);
+  assert.throws(() => store.search({ near: [0, 0, 0] }), /map ID/);
+  assert.throws(() => store.search({ mapId: 'desk', radius: 1 }), /search position/);
+});

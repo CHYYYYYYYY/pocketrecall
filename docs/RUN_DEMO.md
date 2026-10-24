@@ -8,6 +8,7 @@ Run `npm start`, open `http://localhost:3000/run`. No package installation is ne
 2. At 8 seconds the keys move. At 14 seconds a book hides them. Pause while hidden and ask “帮我找钥匙”. The last confirmed location remains available without claiming the hidden object is still there.
 3. Enable sound. Turn using ←/→, tilt using 抬头/低头, and approach using ↑. Alignment drives the haptic cue; approach increases the heartbeat gain and frequency. The virtual wearer is explicitly simulated.
 4. Click an object to inspect its evidence and saved record. Open storage and export the full JSON. Ask “我要出发了” for the last-seen checklist, which does not assert items are being carried.
+5. Enter **无屏体验**. After the initial browser audio/microphone permission, say “找钥匙”, “我要出发了”, “拿到了”, “暂停” or “继续”. A spoken confirmation is saved as a user report; the departure flow advances to the next item. Listening ducks the heartbeat instead of stopping it. Speech recognition pauses during generated speech to avoid hearing its own answer.
 
 ## Real video path
 
@@ -31,16 +32,19 @@ The Node backend stores sessions under `.pocketrecall-data/run/<session-id>/`:
 
 | File | Contents |
 | --- | --- |
-| `session.json` | Input frames, map points, job state, UI target and virtual pose |
-| `spatial-memory.json` | Registered objects, immutable observations, capture poses, events |
+| `session.json` | Input frame metadata, map reference, job state, UI target and virtual pose |
+| `spatial-memory.json` | Registered objects, immutable observations, capture poses, events, user reports and map revision index |
+| `maps/<sha256>.json` | Immutable XYZ/color geometry, deduplicated by content hash and verified on read |
 | `evidence/<sha256>.jpg` | Deduplicated evidence images |
 | `frames/<id>.json` | Capture metadata bound to evidence hash |
 | `input/<id>.jpg` | Original sampled input for reconstruction |
+| `recording.json` | Imported dataset source package; future annotations are excluded from state/export |
 
 | API | Purpose |
 | --- | --- |
 | `GET /api/run/config` | Provider names and configured booleans, no keys |
-| `POST /api/run/session` | New `demo` or `video` session |
+| `POST /api/run/session` | New `demo`, `video` or repeated `recording` session |
+| `POST /api/run/recording` | Validate and import annotations matched to the loaded video |
 | `POST /api/run/frame` | `sessionId`, `seq`, `videoTime`, `imageDataUrl` |
 | `POST /api/run/query` | Text query / departure checklist |
 | `POST /api/run/register` | Register an additional object label |
@@ -49,12 +53,20 @@ The Node backend stores sessions under `.pocketrecall-data/run/<session-id>/`:
 | `POST /api/run/move` | Move a **simulated** wearer |
 | `GET /api/run/state` | Current objects, evidence, map and guidance |
 | `GET /api/run/export` | Full JSON for inspection/export |
+| `GET /api/run/maps` | Durable map index with versions, units and provenance |
+| `GET /api/run/map/:id` | Verified geometry, poses and observations; optional `?revision=HASH` |
+| `GET /api/run/history/:entityId` | Immutable observations in capture order |
+| `POST /api/run/search` | `sessionId`, optional `text`, `mapId`, `near:[x,y,z]`, `radius`, `at`, `limit` |
 
 Session switches abort pending perception; stale results cannot write to the new session. Invalid/failed provider responses preserve earlier evidence. The local server rejects non-localhost Host headers and cross-origin mutations.
 
+Map geometry, pose records and object observations are published together through one atomic memory-index commit for each reconstruction batch. Old geometry revisions remain readable. A new process restores maps and object history without relying on browser state. Spatial searches require an explicit map for distance calculations, and apply the requested capture-time cutoff before selecting the last sighting. Units and synthetic/real provenance cannot be mixed in one map.
+
+See [the 3D memory contract](SPATIAL_MEMORY.md) for the exact storage and dataset replay format.
+
 ## Offline artifact
 
-`npm run preview:build` embeds the current HTML/CSS/JS, synthetic video, manifest and shared spatial geometry into `public/pocketrecall-preview.html`. Open the file directly. This standalone presentation uses browser localStorage and only synthetic detections. It does not contain credentials, call Gemini, or reconstruct uploaded real video. Browser storage limits and file-origin policies can affect persistence; the server-backed app is the durable project implementation.
+`npm run preview:build` embeds the current HTML/CSS/JS, synthetic video, manifest and shared spatial geometry into `public/pocketrecall-preview.html`. Open the file directly. This standalone presentation uses browser localStorage for the synthetic demo or an explicitly imported dataset annotation package. It does not contain credentials, call Gemini, or reconstruct uploaded real video. Browser storage limits and file-origin policies can affect persistence; the server-backed app is the durable project implementation.
 
 Regenerate synthetic assets with `python3 scripts/generate-run-fixture.py` using Python's standard library and ffmpeg. No third-party Python package is required. The generated clip is intentionally a rendered test scene, not a real-world recording.
 
