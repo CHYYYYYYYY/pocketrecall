@@ -1,0 +1,9 @@
+node_modules/
+.env
+.env.local
+.env.*.local
+.pocketrecall-data/
+.pocketrecall-spatial/
+coverage/
+.DS_Store
+*.log
