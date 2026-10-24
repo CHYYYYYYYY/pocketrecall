@@ -5,6 +5,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { MemoryStore } from './lib/memory.mjs';
 import { createVisionClient, validateFrameImage, VisionError } from './lib/vision.mjs';
+import { RunSession } from './lib/run-session.mjs';
+import { createReadStream } from 'node:fs';
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const MAX_BODY_BYTES = 6 * 1024 * 1024;
@@ -52,7 +54,10 @@ export function createAppServer({
   publicDir = path.join(ROOT, 'public'),
   store = new MemoryStore({ dataDir }),
   vision = createVisionClient(),
+  runVision,
+  reconstruction,
 } = {}) {
+  const run = new RunSession({ dataDir: path.join(dataDir, 'run'), fixturePath: path.join(ROOT, 'public', 'assets', 'demo-manifest.json'), ...(runVision ? { vision: runVision } : {}), ...(reconstruction ? { reconstruction } : {}) });
   let inFlight = null;
   const cancelObservation = () => {
     if (inFlight) inFlight.controller.abort();
@@ -68,6 +73,17 @@ export function createAppServer({
       if (!['localhost', '127.0.0.1', '[::1]'].includes(base.hostname)) throw new VisionError('This demo only accepts localhost requests.', 403);
       const url = new URL(req.url, base);
       if (req.method === 'POST' && req.headers.origin && req.headers.origin !== base.origin) throw new VisionError('Cross-origin changes are not allowed.', 403);
+      if (req.method === 'GET' && url.pathname === '/api/run/config') return sendJson(res, 200, run.config());
+      if (req.method === 'GET' && url.pathname === '/api/run/state') return sendJson(res, 200, run.state());
+      if (req.method === 'GET' && url.pathname === '/api/run/reconstruction') return sendJson(res, 200, await run.poll());
+      if (req.method === 'GET' && url.pathname === '/api/run/export') return sendJson(res, 200, run.export());
+      if (req.method === 'GET' && url.pathname.startsWith('/api/run/evidence/')) {
+        const parts = url.pathname.split('/');
+        if (parts.length !== 6) throw new VisionError('Evidence not found.', 404);
+        const evidence = run.evidence(parts[4], parts[5]);
+        res.writeHead(200, { 'content-type': evidence.endsWith('.png') ? 'image/png' : 'image/jpeg', 'cache-control': 'no-store' });
+        return res.end(await readFile(evidence));
+      }
       if (req.method === 'GET' && url.pathname === '/api/config') {
         return sendJson(res, 200, { provider: 'gemini', configured: vision.configured, model: vision.model });
       }
@@ -83,6 +99,12 @@ export function createAppServer({
       }
       if (req.method === 'POST' && url.pathname.startsWith('/api/')) {
         const body = await readJson(req);
+        if (url.pathname === '/api/run/session') return sendJson(res, 200, run.start(body));
+        if (url.pathname === '/api/run/frame') return sendJson(res, 200, await run.ingest(body));
+        if (url.pathname === '/api/run/query') return sendJson(res, 200, run.query(body));
+        if (url.pathname === '/api/run/register') return sendJson(res, 200, run.register(body));
+        if (url.pathname === '/api/run/move') return sendJson(res, 200, run.move(body));
+        if (url.pathname === '/api/run/reconstruct') return sendJson(res, 200, await run.build(body));
         if (url.pathname === '/api/session') {
           if (!['demo', 'live'].includes(body.mode)) throw new VisionError('Session mode must be demo or live.', 400);
           cancelObservation();
@@ -141,12 +163,22 @@ export function createAppServer({
       if (!['GET', 'HEAD'].includes(req.method)) throw new VisionError('Method not allowed.', 405);
       let pathname;
       try { pathname = decodeURIComponent(url.pathname); } catch { throw new VisionError('Invalid path.', 400); }
-      const relative = pathname === '/' ? 'index.html' : pathname.slice(1);
+      const relative = ['/run', '/run/'].includes(pathname) || (pathname === '/' && existsSync(path.join(publicDir, 'run.html'))) ? 'run.html' : ['/', '/desk'].includes(pathname) ? 'index.html' : pathname.slice(1);
       if (relative.split('/').some(part => part.startsWith('.') || part.includes('\\'))) throw new VisionError('File not found.', 404);
       const target = path.resolve(publicDir, relative);
       if (!target.startsWith(`${path.resolve(publicDir)}${path.sep}`)) throw new VisionError('File not found.', 404);
       const info = await stat(target);
       if (!info.isFile()) throw new VisionError('File not found.', 404);
+      if (['.mp4', '.webm'].includes(path.extname(target))) {
+        const mime = target.endsWith('.mp4') ? 'video/mp4' : 'video/webm';
+        const match = req.headers.range?.match(/^bytes=(\d+)-(\d*)$/);
+        const start = match ? Number(match[1]) : 0;
+        const end = match?.[2] ? Math.min(Number(match[2]), info.size - 1) : info.size - 1;
+        if (start > end || start >= info.size) { res.writeHead(416, { 'content-range': `bytes */${info.size}` }); return res.end(); }
+        res.writeHead(match ? 206 : 200, { 'content-type': mime, 'accept-ranges': 'bytes', 'content-length': end - start + 1, ...(match ? { 'content-range': `bytes ${start}-${end}/${info.size}` } : {}) });
+        if (req.method === 'HEAD') return res.end();
+        return createReadStream(target, { start, end }).on('error', () => res.destroy()).pipe(res);
+      }
       const bytes = await readFile(target);
       res.writeHead(200, { 'content-type': MIME[path.extname(target)] || 'application/octet-stream', 'cache-control': 'no-cache' });
       return res.end(req.method === 'HEAD' ? undefined : bytes);
@@ -161,7 +193,9 @@ export function createAppServer({
     }
   });
   server.on('close', cancelObservation);
+  server.on('close', () => run.close());
   server.store = store;
+  server.run = run;
   return server;
 }
 
@@ -172,7 +206,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   const server = createAppServer();
   server.listen(port, '127.0.0.1', () => console.log(`PocketRecall running at http://localhost:${port}`));
   server.on('error', error => {
-    console.error(error.code === 'EADDRINUSE' ? `Port ${port} is already in use. Set PORT to another port.` : 'PocketRecall could not start its local server.');
+    console.error(error.code === 'EADDRINUSE' ? `Port ${port} is already in use. Set PORT to another port.` : `PocketRecall could not start its local server (${error.code || 'unknown error'}).`);
     process.exitCode = 1;
   });
 }

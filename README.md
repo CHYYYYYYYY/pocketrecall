@@ -4,6 +4,21 @@
 
 Built for c0mpiled-16 UCSD / No App. Daily queries are voice-driven after a one-time setup. The visual workspace is an optional evidence and demonstration surface.
 
+## Run console v3 — video → memory → guidance
+
+`npm start` now opens the new product console at **http://localhost:3000/run** (also `/`). The previous desk demo is retained at `/desk`.
+
+- Upload a browser-playable MP4/MOV/WebM. It stays in the browser; square-letterboxed JPEG keyframes are sent to the local server, recognized by Gemini and stored with their original video timestamps.
+- Inspect object evidence, immutable observations, camera poses and exported JSON. Ask by text or browser speech, including “帮我找钥匙” and “我要出发了”.
+- Use arrow keys/WASD or buttons to simulate a wearer. Voice gives direction, alignment triggers a short haptic or screen animation, and a two-beat sound grows louder with proximity. Click **开启声音** first.
+- Optional `FAL_KEY` enables `fal-ai/vggt-1b`: 2–8 keyframes per asynchronous reconstruction. Auto-update submits after every six accepted frames when no job is active. Each batch has its own map; batches are not silently fused. Uncalibrated reconstructions use **relative units**, never meters.
+- A bundled 24-second **synthetic** video exercises movement, occlusion and reacquisition without credentials. Its detections/depth/poses are explicit fixtures; storage, queries and spatial guidance execute normally.
+- `npm run preview:build` produces `public/pocketrecall-preview.html`: a single-file, offline interaction preview with browser storage and synthetic inputs. It contains no API keys. Uploaded real videos require the Node server and configured providers.
+
+See [Run console details](docs/RUN_DEMO.md) and [how HD-EPIC / EgoRecall support the hackathon](docs/HACKATHON_DATA.md).
+
+**Verification limits:** automated integration checks cover the console workflow and mocked provider contracts. In the current task sandbox, localhost bind returns `EPERM` and external DNS returns `ENOTFOUND`; real Gemini/VGGT requests and browser/device QA have not been completed. The Gemini key is stored only in ignored `.env.local`. No HD-EPIC or EgoRecall dataset is bundled yet.
+
 ## Spatial pipeline v2 — validate without a camera or API key
 
 The new technical skeleton supports explicit entity registration, passive updates, evidence-backed 3D observations, current camera pose, and find/reacquire queries. It runs entirely from the command line; a browser server is not needed for validation.
@@ -18,7 +33,7 @@ The demo uses **clearly synthetic images, detections, depth and camera poses** t
 
 Recorded input is accepted through `npm run replay -- --manifest <manifest.json> --out <new-output-directory>`. RGB-only recordings remain unlocalized. Metric 3D requires capture-time intrinsics plus a tracked camera pose and measured depth or a known support plane. A model is never asked to invent world coordinates.
 
-See [the architecture and input contract](docs/SPATIAL_PIPELINE.md). The browser workspace below remains the fixed-camera **v1** demo; it has not been connected to the v2 mobile capture interface. ARKit/ARCore capture, automatic instance re-identification and the gesture UX remain adapter work.
+See [the architecture and input contract](docs/SPATIAL_PIPELINE.md). The classic browser workspace at `/desk` remains the fixed-camera **v1** demo. The new `/run` console connects recorded frames to the spatial pipeline. ARKit/ARCore capture, automatic instance re-identification and the gesture UX remain adapter work.
 
 ## Run in 30 seconds
 
@@ -31,7 +46,7 @@ cd pocketrecall
 npm start
 ```
 
-Open **http://localhost:3000** in Chrome. The labeled **Demo sandbox** works immediately without an API key. Click **Run guided demo**, then try **Where are my keys?**, **And before that?**, and **Have you seen my earbuds?**.
+Open **http://localhost:3000/desk** in Chrome for the classic demo described below. The labeled **Demo sandbox** works immediately without an API key. Click **Run guided demo**, then try **Where are my keys?**, **And before that?**, and **Have you seen my earbuds?**.
 
 The guided scene places keys, moves them, and covers them. Its images and detections are explicitly **synthetic**; it exercises the same persistent memory engine and evidence/query endpoints used by the live camera. It is not a prerecorded or claimed live AI result.
 
