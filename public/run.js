@@ -125,7 +125,8 @@ function renderGuidance(guidance) {
   $('haptic-feedback').textContent = guidance?.aligned ? '已对准 · 轻震' : typeof navigator.vibrate === 'function' ? '对准后轻震' : '桌面屏幕模拟';
   $('pulse-feedback').textContent = feedback.enabled && active ? `咚咚 · ${(1000 / guidance.pulse.intervalMs).toFixed(1)} Hz` : '声音已关闭';
   $('volume-bar').style.width = active ? `${guidance.pulse.gain / .45 * 100}%` : '0%';
-  $('stage-recall').textContent = guidance ? active ? '方向 / 轻震 / 距离音' : '寻找已有图像证据' : '等待寻找目标';
+  $('stage-recall').textContent = guidance?.videoConfirmed ? '后续录像帧已再次看到目标' : guidance ? active ? '方向 / 轻震 / 距离音' : '寻找已有图像证据' : '等待寻找目标';
+  if (guidance?.videoConfirmed) $('voice-feedback').textContent = '录像中已再次看到';
   document.querySelectorAll('[data-move]').forEach(b => b.disabled = !active);
 }
 function drawBoxes() {

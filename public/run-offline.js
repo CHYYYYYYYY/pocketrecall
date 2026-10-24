@@ -24,7 +24,7 @@ export class OfflineRun {
     let instruction = '还没有可用空间位置，请先观察视频。';
     if (active) instruction = Math.abs(raw.bearingDeg) >= 12 ? `向${raw.bearingDeg > 0 ? '右' : '左'}转动视角约 ${Math.round(Math.abs(raw.bearingDeg))}°。` : Math.abs(raw.elevationDeg) >= 15 ? `稍微${raw.elevationDeg > 0 ? '抬头' : '低头'}。` : '方向正确，目标最后出现的位置就在前方。';
     if (active && raw.distanceM < .3) instruction = '已接近记忆位置，请查看图像并确认物体。';
-    return { ...raw, label: object.label, targetId: object.id, aligned, instruction, synthetic: true, simulatedUser: true, coordinateUnits: 'meters', confirmed: false, pulse: { enabled: active, gain: active ? Math.max(.025, Math.min(.45, .22 / Math.max(.2, raw.distanceM))) : 0, intervalMs: active ? Math.max(400, Math.min(1700, 350 + raw.distanceM * 220)) : 0 }, haptic: aligned ? [25] : [] };
+    return { ...raw, label: object.label, targetId: object.id, aligned, instruction, synthetic: true, simulatedUser: true, coordinateUnits: 'meters', confirmed: false, videoConfirmed: Boolean(object.latestCheck?.status === 'seen' && this.data.searchAfterSeq != null && this.data.session.lastSeq > this.data.searchAfterSeq), pulse: { enabled: active, gain: active ? Math.max(.025, Math.min(.45, .22 / Math.max(.2, raw.distanceM))) : 0, intervalMs: active ? Math.max(400, Math.min(1700, 350 + raw.distanceM * 220)) : 0 }, haptic: aligned ? [25] : [] };
   }
   async frame(body) {
     const session = this.data;
@@ -56,6 +56,7 @@ export class OfflineRun {
     if (/出发|出门|leav/.test(text)) { const checklist = this.data.objects.filter(o => o.priority === 'explicit'); message = checklist.map(o => `${o.label}：${o.lastSeen ? '有最后出现的图像' : '尚未看到'}`).join('；') + '。请逐件确认已携带。'; this.event('query', text); this.persist(); return { kind: 'departure', checklist, message, state: this.state() }; }
     const object = this.data.objects.find(o => o.aliases.some(a => text.includes(a)));
     this.data.targetId = object?.id ?? null;
+    this.data.searchAfterSeq = this.data.session.lastSeq;
     if (!object) message = '尚未记住这个物体。';
     else if (!object.lastSeen) message = `还没有看到${object.label}。`;
     else { this.data.simulatedPose = structuredClone(this.data.poses.at(-1)); message = `找到${object.label}的记忆了。${this.guidance().instruction}`; }

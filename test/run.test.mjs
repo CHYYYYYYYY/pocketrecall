@@ -35,6 +35,11 @@ test('Run replay records moved objects and preserves the last seen evidence thro
   const reopened = new RunSession({ dataDir, fixturePath });
   assert.equal(reopened.state().objects[0].lastSeen.id, moved.id); reopened.close();
   await assert.rejects(frame(9), /过期/);
+  run.query({ sessionId: run.session.id, text: '找钥匙' });
+  assert.equal(run.guidance().videoConfirmed, false);
+  await frame(21);
+  assert.equal(run.guidance().videoConfirmed, true);
+  assert.equal(run.guidance().confirmed, false, 'recorded video confirmation is not physical confirmation of the simulated wearer');
 });
 
 test('virtual turning aligns haptics; moving closer increases pulse volume without claiming physical confirmation', async t => {
