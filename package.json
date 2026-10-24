@@ -1,14 +1,18 @@
 {
   "name": "pocketrecall",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "description": "Evidence-backed spatial memory for a screen-free desk assistant.",
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "start": "node server.mjs",
     "dev": "node --watch server.mjs",
     "test": "node --test test/*.test.mjs",
-    "check": "node --check server.mjs && node --check lib/memory.mjs && node --check lib/vision.mjs && node --check public/app.js && node --check public/scene.js"
+    "check": "node scripts/check.mjs",
+    "demo": "node scripts/spatial-demo.mjs",
+    "replay": "node scripts/replay.mjs"
   }
 }

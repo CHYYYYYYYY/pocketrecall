@@ -4,6 +4,22 @@
 
 Built for c0mpiled-16 UCSD / No App. Daily queries are voice-driven after a one-time setup. The visual workspace is an optional evidence and demonstration surface.
 
+## Spatial pipeline v2 — validate without a camera or API key
+
+The new technical skeleton supports explicit entity registration, passive updates, evidence-backed 3D observations, current camera pose, and find/reacquire queries. It runs entirely from the command line; a browser server is not needed for validation.
+
+```sh
+npm run demo
+npm test
+npm run check
+```
+
+The demo uses **clearly synthetic images, detections, depth and camera poses** to run the actual storage, projection and guidance code. It checks active registration → passive movement → occlusion → changed viewpoint → reacquisition, and writes a trace and validation report beneath `.pocketrecall-data/`. Failure exits nonzero. This tests the integration and spatial math; it does **not** measure real-world perception or tracking accuracy.
+
+Recorded input is accepted through `npm run replay -- --manifest <manifest.json> --out <new-output-directory>`. RGB-only recordings remain unlocalized. Metric 3D requires capture-time intrinsics plus a tracked camera pose and measured depth or a known support plane. A model is never asked to invent world coordinates.
+
+See [the architecture and input contract](docs/SPATIAL_PIPELINE.md). The browser workspace below remains the fixed-camera **v1** demo; it has not been connected to the v2 mobile capture interface. ARKit/ARCore capture, automatic instance re-identification and the gesture UX remain adapter work.
+
 ## Run in 30 seconds
 
 Requires **Node.js 22+**. There are **no third-party runtime dependencies** and no install/build step.
