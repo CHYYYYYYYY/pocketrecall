@@ -12,6 +12,8 @@ js += moduleSource('lib/recording.mjs', ['validateRecording', 'recordingFrame'])
 js += moduleSource('public/run-offline.js', ['OfflineRun']);
 js += moduleSource('public/run-map.js', ['SpatialMap']);
 js += moduleSource('public/run-feedback.js', ['Feedback']);
+js += moduleSource('public/pcm-framer.js', ['PcmFramer']);
+js += moduleSource('public/run-live.js', ['LiveConversation']);
 js += `let previewStorage; try { previewStorage = localStorage; } catch {}\nconst previewEngine = new OfflineRun(${fixture}, previewStorage);\nconst originalFetch = window.fetch.bind(window);\nwindow.fetch = async (url, options = {}) => { if (!String(url).startsWith('/api/run/')) return originalFetch(url, options); try { return Response.json(await previewEngine.request(String(url).slice(9), options.body ? JSON.parse(options.body) : undefined)); } catch (error) { return Response.json({error:error.message},{status:error.status||400}); } };\n`;
 js += read('public/run.js').replace(/^import .*?;\s*$/gm, '')
   .replaceAll("'/assets/demo-first-person.mp4'", JSON.stringify(data('public/assets/demo-first-person.mp4', 'video/mp4')))

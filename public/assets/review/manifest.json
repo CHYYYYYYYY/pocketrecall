@@ -1,0 +1,585 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "dataset": "TUM RGB-D / freiburg1_desk",
+    "url": "https://cvg.cit.tum.de/data/datasets/rgbd-dataset",
+    "license": "CC BY 4.0",
+    "geometry": "Measured Kinect depth and recorded motion-capture camera poses; not our SLAM estimates",
+    "perception": "Gemini results recorded separately; see per-frame metadata"
+  },
+  "video": {
+    "url": "/assets/review/desk.mp4",
+    "name": "desk.mp4",
+    "width": 640,
+    "height": 480,
+    "duration": 19.866666666666667
+  },
+  "entities": [
+    {
+      "id": "keyboard",
+      "label": "Keyboard",
+      "aliases": [
+        "keyboard",
+        "键盘"
+      ],
+      "priority": "explicit"
+    },
+    {
+      "id": "mouse",
+      "label": "Mouse",
+      "aliases": [
+        "mouse",
+        "鼠标"
+      ],
+      "priority": "explicit"
+    },
+    {
+      "id": "mug",
+      "label": "Mug",
+      "aliases": [
+        "mug",
+        "cup",
+        "杯子"
+      ],
+      "appearance": "the white drinking mug near the keyboard",
+      "priority": "explicit"
+    }
+  ],
+  "frames": [
+    {
+      "videoTime": 0,
+      "datasetTimestamp": 1305031453.359684,
+      "depthTimeOffsetMs": 14.428,
+      "poseTimeOffsetMs": -0.184,
+      "image": "frame-00.jpg",
+      "imageSha256": "c973628a5e8bc476071998dcd93356cb7807bee44eda74c58ec62ca391ec0a9f",
+      "geometry": "geometry-00.json",
+      "detections": [
+        {
+          "entityId": "keyboard",
+          "status": "seen",
+          "bbox": [
+            0,
+            0.587,
+            0.213,
+            0.874
+          ],
+          "semantics": {
+            "description": "White computer keyboard on the desk",
+            "provider": "gemini",
+            "identityPolicy": "one_instance_per_category",
+            "execution": "recorded",
+            "model": "gemini-3.8-flash",
+            "modelPrediction": true
+          }
+        },
+        {
+          "entityId": "mouse",
+          "status": "seen",
+          "bbox": [
+            0.082,
+            0.545,
+            0.192,
+            0.596
+          ],
+          "semantics": {
+            "description": "Grey computer mouse on the desk",
+            "provider": "gemini",
+            "identityPolicy": "one_instance_per_category",
+            "execution": "recorded",
+            "model": "gemini-3.8-flash",
+            "modelPrediction": true
+          }
+        },
+        {
+          "entityId": "mug",
+          "status": "not_seen",
+          "bbox": null,
+          "semantics": {
+            "description": "",
+            "provider": "gemini",
+            "identityPolicy": "one_instance_per_category",
+            "execution": "recorded",
+            "model": "gemini-3.8-flash",
+            "modelPrediction": true
+          }
+        }
+      ],
+      "recognition": {
+        "model": "gemini-3.8-flash",
+        "recordedAt": "2026-10-25T00:37:03.635Z",
+        "elapsedMs": 2448
+      }
+    },
+    {
+      "videoTime": 2.700029,
+      "datasetTimestamp": 1305031456.059713,
+      "depthTimeOffsetMs": 14.133,
+      "poseTimeOffsetMs": -0.213,
+      "image": "frame-01.jpg",
+      "imageSha256": "b45f6e9526d3200acdfe1572c0044cc9cf4514fdf6cef13acf12d34995d6bacc",
+      "geometry": "geometry-01.json",
+      "detections": [
+        {
+          "entityId": "keyboard",
+          "status": "seen",
+          "bbox": [
+            0.765,
+            0.344,
+            1,
+            0.594
+          ],
+          "semantics": {
+            "description": "a light grey computer keyboard on the desk",
+            "provider": "gemini",
+            "identityPolicy": "one_instance_per_category",
+            "execution": "recorded",
+            "model": "gemini-3.8-flash",
+            "modelPrediction": true
+          }
+        },
+        {
+          "entityId": "mouse",
+          "status": "seen",
+          "bbox": [
+            0.901,
+            0.327,
+            0.982,
+            0.366
+          ],
+          "semantics": {
+            "description": "a light-colored computer mouse near the keyboard",
+            "provider": "gemini",
+            "identityPolicy": "one_instance_per_category",
+            "execution": "recorded",
+            "model": "gemini-3.8-flash",
+            "modelPrediction": true
+          }
+        },
+        {
+          "entityId": "mug",
+          "status": "seen",
+          "bbox": [
+            0.656,
+            0.403,
+            0.725,
+            0.478
+          ],
+          "semantics": {
+            "description": "the white drinking mug near the keyboard containing pens",
+            "provider": "gemini",
+            "identityPolicy": "one_instance_per_category",
+            "execution": "recorded",
+            "model": "gemini-3.8-flash",
+            "modelPrediction": true
+          }
+        }
+      ],
+      "recognition": {
+        "model": "gemini-3.8-flash",
+        "recordedAt": "2026-10-25T00:37:06.744Z",
+        "elapsedMs": 3106
+      }
+    },
+    {
+      "videoTime": 5.367966,
+      "datasetTimestamp": 1305031458.72765,
+      "depthTimeOffsetMs": 17.274,
+      "poseTimeOffsetMs": 1.75,
+      "image": "frame-02.jpg",
+      "imageSha256": "bdd937e3544b1899defbdb22ef1b768f668ba6698896f20dd6966df5d01fadf3",
+      "geometry": "geometry-02.json",
+      "detections": [
+        {
+          "entityId": "keyboard",
+          "status": "seen",
+          "bbox": [
+            0.396,
+            0.479,
+            0.564,
+            0.666
+          ],
+          "semantics": {
+            "description": "black keyboard resting on the desk in front of the center monitor",
+            "provider": "gemini",
+            "identityPolicy": "one_instance_per_category",
+            "execution": "recorded",
+            "model": "gemini-3.8-flash",
+            "modelPrediction": true
+          }
+        },
+        {
+          "entityId": "mouse",
+          "status": "seen",
+          "bbox": [
+            0.373,
+            0.705,
+            0.436,
+            0.755
+          ],
+          "semantics": {
+            "description": "white mouse sitting on a mouse pad on the desk",
+            "provider": "gemini",
+            "identityPolicy": "one_instance_per_category",
+            "execution": "recorded",
+            "model": "gemini-3.8-flash",
+            "modelPrediction": true
+          }
+        },
+        {
+          "entityId": "mug",
+          "status": "unclear",
+          "bbox": null,
+          "semantics": {
+            "description": "possible white mug on the right side of the desk, heavily blurred",
+            "provider": "gemini",
+            "identityPolicy": "one_instance_per_category",
+            "execution": "recorded",
+            "model": "gemini-3.8-flash",
+            "modelPrediction": true
+          }
+        }
+      ],
+      "recognition": {
+        "model": "gemini-3.8-flash",
+        "recordedAt": "2026-10-25T00:37:12.619Z",
+        "elapsedMs": 5874
+      }
+    },
+    {
+      "videoTime": 8.06794,
+      "datasetTimestamp": 1305031461.427624,
+      "depthTimeOffsetMs": -16.494,
+      "poseTimeOffsetMs": 1.776,
+      "image": "frame-03.jpg",
+      "imageSha256": "8330ecafc5a9fc872930719f896d6e5e31e3f2eb6c74fac59ee817872356430a",
+      "geometry": "geometry-03.json",
+      "detections": [
+        {
+          "entityId": "keyboard",
+          "status": "seen",
+          "bbox": [
+            0.433,
+            0.417,
+            0.705,
+            0.584
+          ],
+          "semantics": {
+            "description": "Black computer keyboard behind the laptop and beneath the large monitor",
+            "provider": "gemini",
+            "identityPolicy": "one_instance_per_category",
+            "execution": "recorded",
+            "model": "gemini-3.8-flash",
+            "modelPrediction": true
+          }
+        },
+        {
+          "entityId": "mouse",
+          "status": "seen",
+          "bbox": [
+            0.723,
+            0.597,
+            0.833,
+            0.691
+          ],
+          "semantics": {
+            "description": "Black and silver wired computer mouse resting on a mousepad",
+            "provider": "gemini",
+            "identityPolicy": "one_instance_per_category",
+            "execution": "recorded",
+            "model": "gemini-3.8-flash",
+            "modelPrediction": true
+          }
+        },
+        {
+          "entityId": "mug",
+          "status": "seen",
+          "bbox": [
+            0.81,
+            0.276,
+            0.883,
+            0.358
+          ],
+          "semantics": {
+            "description": "White drinking mug behind the monitor and near a pen holder",
+            "provider": "gemini",
+            "identityPolicy": "one_instance_per_category",
+            "execution": "recorded",
+            "model": "gemini-3.8-flash",
+            "modelPrediction": true
+          }
+        }
+      ],
+      "recognition": {
+        "model": "gemini-3.8-flash",
+        "recordedAt": "2026-10-25T00:37:16.136Z",
+        "elapsedMs": 3517
+      }
+    },
+    {
+      "videoTime": 10.767997,
+      "datasetTimestamp": 1305031464.127681,
+      "depthTimeOffsetMs": -11.844,
+      "poseTimeOffsetMs": 1.619,
+      "image": "frame-04.jpg",
+      "imageSha256": "53653a15253b361bb1dfe8df584031a4c87a64dc84bdf12b4a4f25ed612b43e4",
+      "geometry": "geometry-04.json",
+      "detections": [
+        {
+          "entityId": "keyboard",
+          "status": "seen",
+          "bbox": [
+            0.219,
+            0.254,
+            0.411,
+            0.431
+          ],
+          "semantics": {
+            "description": "black computer keyboard lying on the desk next to the monitor and laptop",
+            "provider": "gemini",
+            "identityPolicy": "one_instance_per_category",
+            "execution": "recorded",
+            "model": "gemini-3.8-flash",
+            "modelPrediction": true
+          }
+        },
+        {
+          "entityId": "mouse",
+          "status": "seen",
+          "bbox": [
+            0.328,
+            0.448,
+            0.375,
+            0.509
+          ],
+          "semantics": {
+            "description": "white and black computer mouse resting on a mousepad",
+            "provider": "gemini",
+            "identityPolicy": "one_instance_per_category",
+            "execution": "recorded",
+            "model": "gemini-3.8-flash",
+            "modelPrediction": true
+          }
+        },
+        {
+          "entityId": "mug",
+          "status": "seen",
+          "bbox": [
+            0.663,
+            0.31,
+            0.719,
+            0.399
+          ],
+          "semantics": {
+            "description": "white drinking mug or cup standing behind the stationery items near the monitor base",
+            "provider": "gemini",
+            "identityPolicy": "one_instance_per_category",
+            "execution": "recorded",
+            "model": "gemini-3.8-flash",
+            "modelPrediction": true
+          }
+        }
+      ],
+      "recognition": {
+        "model": "gemini-3.8-flash",
+        "recordedAt": "2026-10-25T00:37:19.305Z",
+        "elapsedMs": 3168
+      }
+    },
+    {
+      "videoTime": 13.468195,
+      "datasetTimestamp": 1305031466.827879,
+      "depthTimeOffsetMs": -8.377,
+      "poseTimeOffsetMs": 1.421,
+      "image": "frame-05.jpg",
+      "imageSha256": "3ab7d0285b9d7ae7b336cae44c73d3608d53a7e92733ca21f419706705d16d10",
+      "geometry": "geometry-05.json",
+      "detections": [
+        {
+          "entityId": "keyboard",
+          "status": "seen",
+          "bbox": [
+            0.602,
+            0.329,
+            0.781,
+            0.481
+          ],
+          "semantics": {
+            "description": "beige computer keyboard on the desk",
+            "provider": "gemini",
+            "identityPolicy": "one_instance_per_category",
+            "execution": "recorded",
+            "model": "gemini-3.8-flash",
+            "modelPrediction": true
+          }
+        },
+        {
+          "entityId": "mouse",
+          "status": "seen",
+          "bbox": [
+            0.21,
+            0.338,
+            0.277,
+            0.373
+          ],
+          "semantics": {
+            "description": "black computer mouse on a mousepad",
+            "provider": "gemini",
+            "identityPolicy": "one_instance_per_category",
+            "execution": "recorded",
+            "model": "gemini-3.8-flash",
+            "modelPrediction": true
+          }
+        },
+        {
+          "entityId": "mug",
+          "status": "not_seen",
+          "bbox": null,
+          "semantics": {
+            "description": "",
+            "provider": "gemini",
+            "identityPolicy": "one_instance_per_category",
+            "execution": "recorded",
+            "model": "gemini-3.8-flash",
+            "modelPrediction": true
+          }
+        }
+      ],
+      "recognition": {
+        "model": "gemini-3.8-flash",
+        "recordedAt": "2026-10-25T00:37:22.981Z",
+        "elapsedMs": 3674
+      }
+    },
+    {
+      "videoTime": 16.13606,
+      "datasetTimestamp": 1305031469.495744,
+      "depthTimeOffsetMs": -7.224,
+      "poseTimeOffsetMs": 3.556,
+      "image": "frame-06.jpg",
+      "imageSha256": "9cf49352bca514b8d6cf962974de986d9dc99ff31ecb62048b933efda07d383c",
+      "geometry": "geometry-06.json",
+      "detections": [
+        {
+          "entityId": "keyboard",
+          "status": "seen",
+          "bbox": [
+            0.364,
+            0.452,
+            0.708,
+            0.675
+          ],
+          "semantics": {
+            "description": "a beige computer keyboard placed in the center of the desk",
+            "provider": "gemini",
+            "identityPolicy": "one_instance_per_category",
+            "execution": "recorded",
+            "model": "gemini-3.8-flash",
+            "modelPrediction": true
+          }
+        },
+        {
+          "entityId": "mouse",
+          "status": "seen",
+          "bbox": [
+            0.646,
+            0.442,
+            0.719,
+            0.5
+          ],
+          "semantics": {
+            "description": "a grey computer mouse to the right of the keyboard",
+            "provider": "gemini",
+            "identityPolicy": "one_instance_per_category",
+            "execution": "recorded",
+            "model": "gemini-3.8-flash",
+            "modelPrediction": true
+          }
+        },
+        {
+          "entityId": "mug",
+          "status": "seen",
+          "bbox": [
+            0.285,
+            0.414,
+            0.361,
+            0.507
+          ],
+          "semantics": {
+            "description": "a white mug sitting on the desk to the left of the keyboard",
+            "provider": "gemini",
+            "identityPolicy": "one_instance_per_category",
+            "execution": "recorded",
+            "model": "gemini-3.8-flash",
+            "modelPrediction": true
+          }
+        }
+      ],
+      "recognition": {
+        "model": "gemini-3.8-flash",
+        "recordedAt": "2026-10-25T00:37:25.836Z",
+        "elapsedMs": 2854
+      }
+    },
+    {
+      "videoTime": 18.835998,
+      "datasetTimestamp": 1305031472.195682,
+      "depthTimeOffsetMs": -2.792,
+      "poseTimeOffsetMs": 3.418,
+      "image": "frame-07.jpg",
+      "imageSha256": "298c007a474dfff7a213440ac8e42b8374b6ca9c1c4f1bdae6214929983d0d5e",
+      "geometry": "geometry-07.json",
+      "detections": [
+        {
+          "entityId": "keyboard",
+          "status": "seen",
+          "bbox": [
+            0.674,
+            0.123,
+            0.889,
+            0.233
+          ],
+          "semantics": {
+            "description": "partially visible beige computer keyboard at the upper right edge of the desk",
+            "provider": "gemini",
+            "identityPolicy": "one_instance_per_category",
+            "execution": "recorded",
+            "model": "gemini-3.8-flash",
+            "modelPrediction": true
+          }
+        },
+        {
+          "entityId": "mouse",
+          "status": "not_seen",
+          "bbox": null,
+          "semantics": {
+            "description": "",
+            "provider": "gemini",
+            "identityPolicy": "one_instance_per_category",
+            "execution": "recorded",
+            "model": "gemini-3.8-flash",
+            "modelPrediction": true
+          }
+        },
+        {
+          "entityId": "mug",
+          "status": "not_seen",
+          "bbox": null,
+          "semantics": {
+            "description": "",
+            "provider": "gemini",
+            "identityPolicy": "one_instance_per_category",
+            "execution": "recorded",
+            "model": "gemini-3.8-flash",
+            "modelPrediction": true
+          }
+        }
+      ],
+      "recognition": {
+        "model": "gemini-3.8-flash",
+        "recordedAt": "2026-10-25T00:37:28.691Z",
+        "elapsedMs": 2853
+      }
+    }
+  ]
+}

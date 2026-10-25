@@ -1,0 +1,31 @@
+{
+  "passed": true,
+  "checkedAt": "2026-10-25T00:58:51.729512+00:00",
+  "surface": "Actual in-app browser at localhost:3000/run",
+  "action": "Watch kitchen + conversation",
+  "result": "Reached end of clip; four generated audio questions and actual Gemini Live responses in one connection; no retry on final run",
+  "frames": 41,
+  "observations": 246,
+  "referencePoints": 22511,
+  "voiceMode": "generated PCM with explicit activity boundaries; no physical microphone",
+  "turns": [
+    {
+      "videoTime": 20,
+      "reply": "I last saw your wine glass here. Turn right about 128\u00b0."
+    },
+    {
+      "videoTime": 60,
+      "reply": "I last saw your wine glass here. Turn right about 115\u00b0."
+    },
+    {
+      "videoTime": 96,
+      "reply": "In this recording, I have sightings of the wine glass at 00:16, 00:36, 00:40, 01:32, 01:36. These are saved observations."
+    },
+    {
+      "videoTime": 144,
+      "reply": "I last saw your wine glass here. Turn left about 23\u00b0."
+    }
+  ],
+  "screenshot": "../screenshots/kitchen-live.png",
+  "limits": "Reference geometry/model-result replay; relative scale and approximate camera roll. No physical acoustic, localization or research-accuracy validation."
+}

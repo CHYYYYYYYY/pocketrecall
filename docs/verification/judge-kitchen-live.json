@@ -1,0 +1,303 @@
+{
+  "passed": true,
+  "checkedAt": "2026-10-25T00:57:14.574Z",
+  "input": "Official LEDGER / HD-EPIC real kitchen footage",
+  "vision": "replayed LEDGER model outputs; not a new recognition run",
+  "geometry": "Pi3X + TSDF reference cloud, approximate frustum/depth-buffer reveal; relative units; zero-roll camera approximation",
+  "voice": "Real Gemini Live PCM + concurrent JPEG; generated user speech",
+  "frames": 41,
+  "observations": 246,
+  "mapId": "ledger-hdepic-kitchen",
+  "points": 22511,
+  "glassSightingTimes": [
+    16,
+    36,
+    40,
+    92,
+    96,
+    128,
+    136,
+    144
+  ],
+  "snapshots": [
+    {
+      "videoTime": 0,
+      "lastSeen": null,
+      "points": 8822
+    },
+    {
+      "videoTime": 4,
+      "lastSeen": null,
+      "points": 12452
+    },
+    {
+      "videoTime": 8,
+      "lastSeen": null,
+      "points": 14083
+    },
+    {
+      "videoTime": 12,
+      "lastSeen": null,
+      "points": 15679
+    },
+    {
+      "videoTime": 16,
+      "lastSeen": 16,
+      "points": 16383
+    },
+    {
+      "videoTime": 20,
+      "lastSeen": 16,
+      "points": 17855
+    },
+    {
+      "videoTime": 24,
+      "lastSeen": 16,
+      "points": 18587
+    },
+    {
+      "videoTime": 28,
+      "lastSeen": 16,
+      "points": 18801
+    },
+    {
+      "videoTime": 32,
+      "lastSeen": 16,
+      "points": 18862
+    },
+    {
+      "videoTime": 36,
+      "lastSeen": 36,
+      "points": 19289
+    },
+    {
+      "videoTime": 40,
+      "lastSeen": 40,
+      "points": 19331
+    },
+    {
+      "videoTime": 44,
+      "lastSeen": 40,
+      "points": 19727
+    },
+    {
+      "videoTime": 48,
+      "lastSeen": 40,
+      "points": 19977
+    },
+    {
+      "videoTime": 52,
+      "lastSeen": 40,
+      "points": 20065
+    },
+    {
+      "videoTime": 56,
+      "lastSeen": 40,
+      "points": 20132
+    },
+    {
+      "videoTime": 60,
+      "lastSeen": 40,
+      "points": 20194
+    },
+    {
+      "videoTime": 64,
+      "lastSeen": 40,
+      "points": 20216
+    },
+    {
+      "videoTime": 68,
+      "lastSeen": 40,
+      "points": 20235
+    },
+    {
+      "videoTime": 72,
+      "lastSeen": 40,
+      "points": 20252
+    },
+    {
+      "videoTime": 76,
+      "lastSeen": 40,
+      "points": 20304
+    },
+    {
+      "videoTime": 80,
+      "lastSeen": 40,
+      "points": 20352
+    },
+    {
+      "videoTime": 84,
+      "lastSeen": 40,
+      "points": 20372
+    },
+    {
+      "videoTime": 88,
+      "lastSeen": 40,
+      "points": 21082
+    },
+    {
+      "videoTime": 92,
+      "lastSeen": 92,
+      "points": 21138
+    },
+    {
+      "videoTime": 96,
+      "lastSeen": 96,
+      "points": 21145
+    },
+    {
+      "videoTime": 100,
+      "lastSeen": 96,
+      "points": 21148
+    },
+    {
+      "videoTime": 104,
+      "lastSeen": 96,
+      "points": 21271
+    },
+    {
+      "videoTime": 108,
+      "lastSeen": 96,
+      "points": 21306
+    },
+    {
+      "videoTime": 112,
+      "lastSeen": 96,
+      "points": 21348
+    },
+    {
+      "videoTime": 116,
+      "lastSeen": 96,
+      "points": 21362
+    },
+    {
+      "videoTime": 120,
+      "lastSeen": 96,
+      "points": 21381
+    },
+    {
+      "videoTime": 124,
+      "lastSeen": 96,
+      "points": 21582
+    },
+    {
+      "videoTime": 128,
+      "lastSeen": 128,
+      "points": 21614
+    },
+    {
+      "videoTime": 132,
+      "lastSeen": 128,
+      "points": 21858
+    },
+    {
+      "videoTime": 136,
+      "lastSeen": 136,
+      "points": 21880
+    },
+    {
+      "videoTime": 140,
+      "lastSeen": 136,
+      "points": 21914
+    },
+    {
+      "videoTime": 144,
+      "lastSeen": 144,
+      "points": 22110
+    },
+    {
+      "videoTime": 148,
+      "lastSeen": 144,
+      "points": 22139
+    },
+    {
+      "videoTime": 152,
+      "lastSeen": 144,
+      "points": 22243
+    },
+    {
+      "videoTime": 156,
+      "lastSeen": 144,
+      "points": 22454
+    },
+    {
+      "videoTime": 160,
+      "lastSeen": 144,
+      "points": 22511
+    }
+  ],
+  "turns": [
+    {
+      "videoTime": 20,
+      "inputTranscript": "Where did you last see the wine glass?",
+      "outputTranscript": "I last saw your wine glass here. Turn right about 128°.",
+      "tools": [
+        "memory.search",
+        "guidance.start"
+      ],
+      "evidenceTimes": [
+        16
+      ],
+      "model": "gemini-3.8-live",
+      "videoFrames": 10,
+      "outputAudioBytes": 229922,
+      "firstAudioMs": 4800,
+      "totalMs": 9615
+    },
+    {
+      "videoTime": 60,
+      "inputTranscript": "Find the wine glass.",
+      "outputTranscript": "I last saw your wine glass here. Turn right about 115°.",
+      "tools": [
+        "memory.search",
+        "guidance.start"
+      ],
+      "evidenceTimes": [
+        40
+      ],
+      "model": "gemini-3.8-live",
+      "videoFrames": 9,
+      "outputAudioBytes": 222242,
+      "firstAudioMs": 4329,
+      "totalMs": 8854
+    },
+    {
+      "videoTime": 96,
+      "inputTranscript": "Show the wine glass history.",
+      "outputTranscript": "I observed the wine glass in this recording at 00:16, 00:36, 00:40, 01:32, and 01:36.",
+      "tools": [
+        "memory.history"
+      ],
+      "evidenceTimes": [
+        16,
+        36,
+        40,
+        92,
+        96
+      ],
+      "model": "gemini-3.8-live",
+      "videoFrames": 14,
+      "outputAudioBytes": 455522,
+      "firstAudioMs": 4510,
+      "totalMs": 13995
+    },
+    {
+      "videoTime": 144,
+      "inputTranscript": "Find the wine glass again.",
+      "outputTranscript": "I last saw your wine glass here. Turn left about 23°.",
+      "tools": [
+        "memory.search",
+        "guidance.start"
+      ],
+      "evidenceTimes": [
+        144
+      ],
+      "model": "gemini-3.8-live",
+      "videoFrames": 8,
+      "outputAudioBytes": 199680,
+      "firstAudioMs": 4282,
+      "totalMs": 8435
+    }
+  ],
+  "restart": "server recreated; identical memory/maps and readable saved evidence"
+}

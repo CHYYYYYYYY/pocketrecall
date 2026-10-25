@@ -63,6 +63,21 @@ test('Run page consumes video frames, renders actual stored objects, and updates
   await ui.run('move("right")'); assert.match(ui.elements.get('answer').textContent, /Turn|ahead|higher|lower|close/);
 });
 
+test('Run sends user input through the agent and displays its evidence trail', async () => {
+  const ui = await harness(); await ui.run('processFrame()');
+  await ui.run('ask("Find my keys")');
+  assert.match(ui.elements.get('agent-trace').innerHTML, /memory.search|Preview commands/);
+});
+
+test('switching the recording cancels generated user speech and the pending guided turn', async () => {
+  const ui=await harness();
+  await ui.run('guided={sessionId:state.session.id,audio:{pause(){this.paused=true;}},finishAudio(){this.finished=true;}};globalThis.oldGuide=guided;');
+  await ui.run('loadSource({mode:"demo",url:"/assets/demo-first-person.mp4",filename:"Demo"})');
+  assert.equal(ui.run('guided'),null);
+  assert.equal(ui.run('oldGuide.audio.paused'),true);
+  assert.equal(ui.run('oldGuide.finished'),true);
+});
+
 test('Run page preserves out-of-view evidence, shows a departure checklist, and exposes stored JSON', async () => {
   const ui = await harness(); await ui.run('processFrame()');
   await ui.run('video.currentTime=9;processFrame()');
@@ -78,6 +93,41 @@ test('Run page does not imply real recognition in offline preview after choosing
   await ui.run('play()');
   assert.equal(ui.engine.state().frameCount, 0); assert.match(ui.elements.get('toast').textContent, /Gemini/);
   assert.equal(ui.run('running'), false);
+});
+
+test('Run observation stops at its frame budget while keeping the saved memory queryable', async () => {
+  const ui = await harness(); await ui.run('processFrame()');
+  await ui.run('config.maxFrames=1; video.currentTime=2; running=true; observeLoop()');
+  assert.equal(ui.engine.state().frameCount, 1, 'no extra frame is submitted after the budget is exhausted');
+  assert.equal(ui.run('running'), false);
+  assert.match(ui.elements.get('toast').textContent, /limit|full/i);
+  await ui.run('ask("Find my keys")');
+  assert.equal(ui.engine.state().targetId, 'keys');
+});
+
+test('failed recognition stops the analyzing indicator and leaves existing memories searchable', async () => {
+  const ui = await harness(); await ui.run('processFrame()');
+  ui.engine.frame = async () => { throw new Error('Gemini returned HTTP 402. Check billing access.'); };
+  await ui.run('video.currentTime=2; running=true; observeLoop()');
+  assert.equal(ui.run('running'), false);
+  assert.equal(ui.elements.get('latency').textContent, 'PAUSED');
+  assert.match(ui.elements.get('stage-detect').textContent, /paused/i);
+  assert.equal(ui.engine.state().frameCount, 1);
+  await ui.run('ask("Find my keys")');
+  assert.equal(ui.engine.state().targetId, 'keys');
+});
+
+test('memory library describes preview scope and restoring video memory clears an unrelated video source', async () => {
+  const ui = await harness(); await ui.run('processFrame()');
+  await ui.run('library()');
+  assert.equal(ui.elements.get('detail-dialog').open, true);
+  assert.match(ui.elements.get('detail-body').innerHTML, /current session|one session/i);
+  await ui.run('loadSource({mode:"video",url:"blob:local-video",filename:"test.mp4",file:{name:"test.mp4"}})');
+  await ui.run('restoreSession(state.session.id)');
+  assert.equal(ui.run('sourceFile'), null);
+  assert.equal(ui.run('sourceUrl'), null);
+  assert.equal(ui.run('running'), false);
+  assert.match(ui.elements.get('video-error').textContent, /restored|saved/i);
 });
 
 const recording = () => ({ schemaVersion: 1, provenance: 'dataset_annotations', source: { dataset: 'fixture dataset for tests' }, mapId: 'room_test', coordinateUnits: 'meters', imageSpace: 'letterboxed_square', video: { name: 'clip.mp4', width: 960, height: 600, duration: 24 }, entities: [{ id: 'keys', label: 'Keys', aliases: ['keys'], priority: 'explicit' }], points: [[0, 0, 0, '#aabbcc']], frames: [1, 3, 5].map((videoTime, index) => ({ videoTime, worldFromCamera: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], detections: [index === 2 ? { entityId: 'keys', status: 'not_seen' } : { entityId: 'keys', status: 'seen', bbox: [.1, .2, .3, .4], worldPosition: [index + 1, 0, 2] }] })) });

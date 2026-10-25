@@ -30,14 +30,19 @@
 <main id="app-main">
   <section class="heading">
     <div class="heading-title"><p class="eyebrow">SPATIAL MEMORY, WITHOUT A SCREEN.</p><h1>A little less <em>lost.</em></h1></div>
-    <div class="heading-aside"><p>You put it down. Life moved on.<br>Pick up the memory when you need it.</p><button class="button accent" id="enter-invisible">Try it with your eyes up <svg><use href="#i-arrow"/></svg></button><span class="quiet-caption">Voice, a small tap, a familiar heartbeat.</span></div>
+    <div class="heading-aside"><p>You put it down. Life moved on.<br>Ask your memory. Keep your eyes up.</p><button class="button accent" id="enter-invisible">Try it with your eyes up <svg><use href="#i-arrow"/></svg></button><a class="quiet-caption" href="#service-story">A no-app memory service · explore the idea ↓</a></div>
   </section>
 
   <section class="sourcebar" aria-label="Recording source">
     <div class="source-title"><span class="source-dot"></span><div><b id="source-name">The desk recording</b><small id="source-caption">A 24-second simulated scene. Real memory, stored as you watch.</small></div></div>
-    <div class="source-actions"><button id="sample-button" class="button quiet">Demo</button><button id="public-sample" class="button quiet">Sample film ↗</button><button id="recording-button" class="button outline" title="Load a matching video first, then import its spatial annotation JSON">Import spatial data</button><button id="upload-button" class="button dark"><svg><use href="#i-upload"/></svg>Use your video</button><input id="video-file" type="file" accept="video/*,.mp4,.mov,.webm" hidden><input id="recording-file" type="file" accept="application/json,.json" hidden></div>
+    <div class="source-actions"><button id="sample-button" class="button quiet">Demo</button><button id="kitchen-button" class="button accent">Real kitchen ↗</button><button id="review-button" class="button accent">Real desk ↗</button><button id="public-sample" class="button quiet">Sample film ↗</button><button id="recording-button" class="button outline" title="Load a matching video first, then import its spatial annotation JSON">Import spatial data</button><button id="upload-button" class="button dark"><svg><use href="#i-upload"/></svg>Use your video</button><input id="video-file" type="file" accept="video/*,.mp4,.mov,.webm" hidden><input id="recording-file" type="file" accept="application/json,.json" hidden></div>
   </section>
 
+  <section class="guided-demo" id="guided-demo" aria-label="Guided kitchen demonstration">
+    <div><span class="eyebrow">REAL FOOTAGE. A CONVERSATION WITH MEMORY.</span><h2>A glass leaves view. Its memory stays.</h2><p>LEDGER / HD-EPIC research replay. The reference cloud unfolds with the film; object history is saved as each sample arrives.</p></div>
+    <div><button class="button dark" id="guided-start">▶ Watch kitchen + conversation</button><p id="guided-status" aria-live="polite">2× playback · generated user voice · no microphone needed</p></div>
+    <ol id="demo-transcript" class="demo-transcript" aria-live="polite"></ol>
+  </section>
   <section class="stage-grid" aria-label="Video and spatial memory">
     <article class="panel video-panel">
       <div class="panel-header"><h2><span class="section-index">01</span>Through your eyes</h2><span class="live-label" id="stream-status"><i></i>PAUSED</span></div>
@@ -57,6 +62,12 @@
       <div class="map-stage"><canvas id="space-map" tabindex="0" aria-label="3D memory. Drag to orbit, scroll to zoom. Use remembered object buttons below to select a target."></canvas><div class="map-badges"><span class="pill" id="map-source">NO MAP YET</span><span class="mono" id="point-count">0 POINTS</span></div><div class="map-bottom"><span><i class="legend-mint"></i>Scene <i class="legend-lime"></i>Objects <i class="legend-blue"></i>Path</span><small>Drag to look around</small></div><div id="map-empty" class="map-empty"><span class="map-crosshair" aria-hidden="true">+</span><b>Room to remember.</b><p>Play the demo to see the space take shape.</p></div></div>
       <div class="map-controls"><div><b id="map-status">Waiting for a first look</b><small id="map-note">Known geometry from the simulated scene</small></div><label class="auto-map"><input id="auto-map" type="checkbox" checked>Auto</label><button class="button outline small" id="build-map">Build 3D</button></div>
     </article>
+  </section>
+
+  <section class="demo-key" aria-label="What the demonstration shows">
+    <article><span class="eyebrow">INPUT / WHAT THE GLASSES SEE</span><h3>A first-person view.</h3><p>Real kitchen and Real desk use actual camera footage. Demo uses a synthetic scene. The source label tells you which is playing.</p></article>
+    <article><span class="eyebrow">MEMORY / WHAT THE MAP MEANS</span><h3>A place, an image, a time.</h3><p>Points show the space; markers show last-seen objects; the blue path follows the camera. The kitchen cloud is a progressive reference replay. Object cards keep the image evidence.</p></article>
+    <article><span class="eyebrow">OUTPUT / HOW YOU FIND IT</span><h3>Ask. Listen. Look again.</h3><p>Speech queries the saved memory. Directions, an alignment tap and a proximity heartbeat guide a simulated wearer. A remembered location is a clue, not proof the item is still there.</p></article>
   </section>
 
   <div class="process-wrap">
@@ -81,16 +92,24 @@
 
     <article class="panel guidance-panel">
       <div class="panel-header"><h2><span class="section-index">04</span>Let the sound lead.</h2><button id="sound-toggle" class="button quiet small" aria-pressed="false"><svg><use href="#i-sound"/></svg>Sound off</button></div>
-      <form class="voice-input" id="query-form"><button type="button" id="mic-button" aria-label="Speak a request"><svg><use href="#i-mic"/></svg></button><input id="query-input" maxlength="500" placeholder="Where did I leave my keys?" aria-label="What would you like to find?"><button type="submit" aria-label="Find this object"><svg><use href="#i-arrow"/></svg></button></form>
-      <div class="search-chips"><span>Try</span><button data-query="Find my keys">My keys</button><button data-query="Find my wallet">My wallet</button><button data-query="I'm heading out">I'm heading out ↗</button></div>
-      <p class="speech-note" id="speech-note">Say it out loud, or type it here.</p>
+      <form class="voice-input" id="query-form"><button type="button" id="mic-button" aria-label="Start live conversation" aria-pressed="false"><svg><use href="#i-mic"/></svg></button><input id="query-input" maxlength="500" placeholder="Where did I leave my keys?" aria-label="What would you like to find?"><button type="submit" aria-label="Find this object"><svg><use href="#i-arrow"/></svg></button></form>
+      <div class="search-chips"><span>Try</span><button id="suggestion-one" data-query="Find my keys">My keys</button><button id="suggestion-two" data-query="Find my wallet">My wallet</button><button data-query="I'm heading out">I'm heading out ↗</button></div>
+      <p class="speech-note" id="speech-note">Live voice + video. Speak naturally; interrupt at any time.</p><button class="button quiet small" id="browser-voice">Use browser voice fallback</button>
       <div class="guide-main"><div class="direction-orb" id="direction-orb"><div class="orbit-ring"></div><div id="direction-arrow">↑</div><span id="direction-label">READY</span></div><div class="guide-copy"><span class="eyebrow" id="guide-target">A WAY BACK</span><p id="answer" aria-live="polite">What are you looking for?</p><div class="distance"><strong id="distance">—</strong><span id="distance-unit">Choose an object</span></div></div></div>
+      <details class="agent-details"><summary>Why this answer ↗</summary><div id="agent-trace">Ask about an object to see its saved evidence.</div></details>
       <div class="feedback-grid"><div><svg><use href="#i-sound"/></svg><span>Direction</span><b id="voice-feedback">Waiting</b></div><div id="haptic-tile"><span class="haptic-icon" aria-hidden="true">≋</span><span>A light tap</span><b id="haptic-feedback">Screen simulation</b></div><div><svg><use href="#i-heart"/></svg><span>Getting closer</span><b id="pulse-feedback">Sound off</b><div class="volume-track"><i id="volume-bar"></i></div></div></div>
       <details class="movement-details"><summary>Move the simulated wearer <span>W A S D</span></summary><div class="sim-controls"><div><button data-move="left" aria-label="Turn left">←</button><button data-move="forward" aria-label="Step forward">↑</button><button data-move="back" aria-label="Step back">↓</button><button data-move="right" aria-label="Turn right">→</button><button data-move="up">Look up</button><button data-move="down">Look down</button><button data-move="reset" aria-label="Reset wearer position">⤾</button></div></div><p class="guide-note">This moves a virtual wearer. A remembered place is a starting point; finding the object still needs a look.</p></details>
       <div id="checklist" class="checklist" hidden></div>
     </article>
   </section>
-  <footer><span>POCKETRECALL <i>—</i> <span class="footer-subtitle">AN EXPERIMENT IN EVERYDAY MEMORY.</span></span><div><span id="api-status">CONNECTING</span><button id="open-settings">Connections ↗</button><span class="mono" id="session-short">—</span><span id="mode-badge" class="pill">SIMULATION</span></div></footer>
+  <section class="service-story" id="service-story" aria-labelledby="service-title">
+    <div class="service-intro"><div><p class="eyebrow">THE SERVICE / NO APP TO MANAGE</p><h2 id="service-title">Less searching.<br>More being there.</h2></div><div><p>PocketRecall is designed to live behind your glasses: notice everyday objects, remember their last-seen places, and answer when you ask. No dedicated phone app to open, inventory to maintain, or dashboard to check.</p><p>This website is our glasses simulator and evidence viewer. It exposes what the service observes, remembers and says, so you can inspect the experience that would usually stay in the background.</p></div></div>
+    <div class="service-features"><span>Remember across time</span><span>Ask by voice</span><span>Follow sound &amp; touch</span><span>Inspect the evidence</span></div>
+    <div class="audience-heading"><p class="eyebrow">WHO WE ARE DESIGNING FOR</p><h3>A little help, in familiar places.</h3></div>
+    <div class="audience-grid"><article><span>01 / EVERYDAY LIFE</span><h3>The everyday forgetter.</h3><p>Keys, glasses, a wallet. Find the things you put down while your attention was somewhere else.</p></article><article><span>02 / EVERYDAY INDEPENDENCE</span><h3>Older adults.</h3><p>A simple spoken way to recall where familiar belongings were last seen, for people who find keeping track of them harder.</p></article><article><span>03 / EVERYDAY WORK</span><h3>Warehouse teams.</h3><p>Recall where tools, supplies and shared items appeared across a busy shift, with time and image evidence to check.</p></article></div>
+    <div class="physical-future"><span class="eyebrow">LOOKING AHEAD / PHYSICAL INTELLIGENCE</span><h3>A shared memory of the physical world.</h3><p>The same object, place and time records could help a future robot or embodied agent answer “Where was it?” before deciding what to do. Our next direction is connecting human observations to robot perception, spatial reasoning and assistance through a shared memory interface.</p><small>Product direction, not a deployed robot capability. Reliable tracking, cross-device map alignment and physical-world evaluation are next steps.</small></div>
+  </section>
+  <footer><span>POCKETRECALL <i>—</i> <span class="footer-subtitle">A LITTLE LESS LOST. A LITTLE MORE PRESENT.</span></span><div><span id="api-status">CONNECTING</span><button id="open-settings">Connections ↗</button><span class="mono" id="session-short">—</span><span id="mode-badge" class="pill">SIMULATION</span></div></footer>
 </main>
 <section id="invisible-view" class="invisible-view" hidden role="dialog" aria-modal="true" aria-label="Screen-free guidance">
   <div class="invisible-top"><span class="brand"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>PocketRecall</span><button id="exit-invisible" class="button outline">Back to the experiment ↗</button></div>
