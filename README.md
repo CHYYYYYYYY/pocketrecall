@@ -2,6 +2,8 @@
 
 **A little less lost.** A screen-free spatial memory demo: remember where an object was last seen, then find it through voice, a light tap and a proximity heartbeat. The webpage simulates smart glasses and shows the memory behind the experience.
 
+▶ **[Concept film (1:46)](media/pocketrecall-concept-film.mp4)** — the product vision. Its HUD, 3D map and footage are simulated with CC0 photos ([credits](media/CREDITS.md)); the working demo is below.
+
 ## Run
 
 Requires **Node.js 22+**. No dependency installation or build step is needed.
