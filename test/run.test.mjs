@@ -34,7 +34,7 @@ test('Run replay records moved objects and preserves the last seen evidence thro
   assert.equal(hidden.lastSeen.evidence.sha256.length, 64);
   const reopened = new RunSession({ dataDir, fixturePath });
   assert.equal(reopened.state().objects[0].lastSeen.id, moved.id); reopened.close();
-  await assert.rejects(frame(9), /过期/);
+  await assert.rejects(frame(9), /out of order/);
   run.query({ sessionId: run.session.id, text: '找钥匙' });
   assert.equal(run.guidance().videoConfirmed, false);
   await frame(21);
@@ -53,7 +53,7 @@ test('virtual turning aligns haptics; moving closer increases pulse volume witho
   assert.ok(g.distanceM < before.distanceM); assert.ok(g.pulse.gain > before.pulse.gain); assert.ok(g.pulse.intervalMs < before.pulse.intervalMs);
   assert.equal(g.simulatedUser, true); assert.equal(g.confirmed, false);
   const departure = run.query({ sessionId: run.session.id, text: '我要出发了' });
-  assert.equal(departure.checklist.length, 3); assert.match(departure.message, /不能证明/);
+  assert.equal(departure.checklist.length, 3); assert.match(departure.message, /as you pick each item up/);
 });
 
 test('real-video failures never fall back to synthetic observations', async t => {
@@ -67,9 +67,9 @@ test('switching sessions while Gemini is responding cannot contaminate the new s
   let finish;
   const { run, frame } = runFixture(t, { vision: { configured: true, model: 'test', analyze: () => new Promise(resolve => finish = resolve) } });
   run.start({ mode: 'video' }); const pending = frame(0);
-  await assert.rejects(frame(1), /上一帧/);
+  await assert.rejects(frame(1), /previous frame/);
   run.start({ mode: 'demo' }); finish(seen);
-  await assert.rejects(pending, /旧会话/); assert.equal(run.state().frameCount, 0); assert.equal(run.busy, null);
+  await assert.rejects(pending, /previous session/); assert.equal(run.state().frameCount, 0); assert.equal(run.busy, null);
 });
 
 test('RGB-only video stores evidence and semantics but cannot invent 3D directions', async t => {
@@ -93,7 +93,7 @@ test('voice departure confirms items explicitly and advances without overwriting
   assert.equal(confirmation.confirmedBy, 'user_report');
   assert.ok(run.session.confirmedIds.includes(first)); assert.notEqual(run.session.targetId, first);
   query('拿到了'); const completed = query('拿到了');
-  assert.match(completed.message, /逐件确认/); assert.equal(run.session.targetId, null);
+  assert.match(completed.message, /Every item on your list is checked off/); assert.equal(run.session.targetId, null);
   assert.equal(run.pipeline.store.snapshot().userReports.length, 3);
   assert.deepEqual(run.pipeline.store.snapshot().observations, before);
   assert.equal(query('取消寻找').state.guidance, null);
@@ -131,7 +131,7 @@ test('VGGT response aligns per-frame boxes and poses, persists a relative map, a
 test('invalid VGGT frame correspondence does not mutate object positions', async t => {
   const { run, frame } = runFixture(t, { vision: { configured: true, analyze: async () => seen }, reconstruction: { configured: true, submit: async () => 'id', status: async () => ({ status: 'COMPLETED' }), result: async () => ({ num_frames: 1 }) } });
   run.start({ mode: 'video' }); await frame(0); await frame(1); await run.build({ sessionId: run.session.id });
-  await assert.rejects(run.poll(), /未对齐/); assert.equal(run.state().objects[0].lastSeen.position, null); assert.equal(run.session.job.status, 'failed');
+  await assert.rejects(run.poll(), /does not match/); assert.equal(run.state().objects[0].lastSeen.position, null); assert.equal(run.session.job.status, 'failed');
 });
 
 test('VGGT depth decoding, rigid inversion, and provider URL restrictions are enforced', async () => {
@@ -163,5 +163,47 @@ test('offline presentation executes geometry, occlusion, queries and browser per
   const result = await engine.request('query', { sessionId: engine.data.session.id, text: '找钥匙' }); assert.equal(result.state.guidance.simulatedUser, true);
   const reopened = new OfflineRun(fixture, adapter); assert.equal(reopened.state().frameCount, 3);
   assert.equal((await reopened.request('config')).vision.configured, false);
-  reopened.start({ mode: 'video' }); await assert.rejects(reopened.frame({ seq: 1, videoTime: 0, imageDataUrl: PNG }), /只处理合成/);
+  reopened.start({ mode: 'video' }); await assert.rejects(reopened.frame({ seq: 1, videoTime: 0, imageDataUrl: PNG }), /supports synthetic recordings/);
+});
+
+test('English voice requests complete the same find-and-confirm flow on the server and in the preview', async t => {
+  const { run, frame } = runFixture(t); await frame(9);
+  const preview = new OfflineRun(fixture); await preview.frame({ seq: 1, videoTime: 9, imageDataUrl: PNG });
+  for (const engine of [run, preview]) {
+    const sessionId = engine.state().session.id;
+    const query = text => engine.query({ sessionId, text });
+    const found = query('Find my keys');
+    assert.equal(found.state.targetId, 'keys'); assert.match(found.message, /last saw your keys/);
+    assert.equal(/[\p{Script=Han}]/u.test(found.message), false);
+    assert.equal(query("I'm heading out").kind, 'departure');
+    assert.equal(query('I got it').state.targetId, 'wallet');
+    assert.equal(query('I’ve got my wallet').state.targetId, 'earbuds');
+    assert.match(query('I have my earbuds').message, /Every item on your list is checked off/);
+    assert.equal(query('Pause the video').kind, 'pause');
+    assert.equal(query('Keep watching').kind, 'resume');
+    assert.equal(query('Stop looking').state.targetId, null);
+    assert.equal(query('帮我找钥匙').state.targetId, 'keys', 'Chinese aliases remain usable');
+  }
+});
+
+test('legacy default labels reopen in English while custom labels and stored evidence remain intact', async t => {
+  const { run, frame, dataDir } = runFixture(t); await frame(9);
+  run.pipeline.register({ id: 'keys', label: '钥匙', aliases: ['钥匙'], priority: 'explicit' });
+  run.pipeline.register({ id: 'phone', label: '我的手机', aliases: ['手机'] });
+  run.session.events.push({ id: 'old-event', type: 'memory', at: new Date().toISOString(), text: '坐标与证据已保存' });
+  run.persist(); const prior = run.pipeline.store.snapshot().observations;
+  const restored = new RunSession({ dataDir, fixturePath }); t.after(() => restored.close());
+  assert.equal(restored.state().objects.find(o => o.id === 'keys').label, 'Keys');
+  assert.equal(restored.state().objects.find(o => o.id === 'phone').label, '我的手机');
+  assert.deepEqual(restored.pipeline.store.snapshot().observations, prior);
+  assert.equal(restored.state().events.at(-1).text, 'Frame saved to memory.');
+  assert.equal(restored.state().events.at(-1).originalText, '坐标与证据已保存');
+  const saved = new Map(), storage = { setItem: (k, v) => saved.set(k, v), getItem: k => saved.get(k) };
+  const preview = new OfflineRun(fixture, storage);
+  preview.data.objects[0].label = '钥匙'; preview.data.objects[1].label = '我的钱包';
+  preview.data.events.push({ type: 'memory', text: '坐标与证据已保存' }); preview.persist();
+  const reopened = new OfflineRun(fixture, storage);
+  assert.equal(reopened.state().objects[0].label, 'Keys');
+  assert.equal(reopened.state().objects[1].label, '我的钱包');
+  assert.equal(reopened.state().events.at(-1).text, 'Frame saved to memory.');
 });

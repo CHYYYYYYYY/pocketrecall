@@ -55,20 +55,20 @@ async function harness({ speech = false } = {}) {
 test('Run page consumes video frames, renders actual stored objects, and updates typed guidance through API calls', async () => {
   const ui = await harness(); await ui.run('processFrame()');
   assert.equal(ui.elements.get('storage-count').textContent, 4);
-  assert.match(ui.elements.get('objects').innerHTML, /已保存空间位置/);
-  await ui.run('ask("帮我找钥匙")');
-  assert.match(ui.elements.get('answer').textContent, /钥匙/);
-  assert.equal(ui.elements.get('distance-unit').textContent, 'm · 模拟距离');
+  assert.match(ui.elements.get('objects').innerHTML, /Position remembered/);
+  await ui.run('ask("Find my keys")');
+  assert.match(ui.elements.get('answer').textContent, /keys/i);
+  assert.equal(ui.elements.get('distance-unit').textContent, 'm / simulated distance');
   assert.equal(ui.run('state.guidance.simulatedUser'), true);
-  await ui.run('move("right")'); assert.match(ui.elements.get('answer').textContent, /视角|方向|抬头|低头/);
+  await ui.run('move("right")'); assert.match(ui.elements.get('answer').textContent, /Turn|ahead|higher|lower|close/);
 });
 
 test('Run page preserves out-of-view evidence, shows a departure checklist, and exposes stored JSON', async () => {
   const ui = await harness(); await ui.run('processFrame()');
   await ui.run('video.currentTime=9;processFrame()');
   await ui.run('video.currentTime=15;processFrame()');
-  assert.match(ui.elements.get('objects').innerHTML, /已离开视野/);
-  await ui.run('ask("我要出发了")'); assert.equal(ui.elements.get('checklist').hidden, false); assert.match(ui.elements.get('checklist').innerHTML, /逐件确认/);
+  assert.match(ui.elements.get('objects').innerHTML, /out of view/);
+  await ui.run('ask("I am heading out")'); assert.equal(ui.elements.get('checklist').hidden, false); assert.match(ui.elements.get('checklist').innerHTML, /Confirm each item/);
   await ui.run('storage()'); assert.equal(ui.elements.get('detail-dialog').open, true); assert.match(ui.elements.get('detail-body').innerHTML, /sha256/);
   await ui.run('restart()'); assert.equal(ui.run('state.frameCount'), 0);
 });
@@ -80,7 +80,7 @@ test('Run page does not imply real recognition in offline preview after choosing
   assert.equal(ui.run('running'), false);
 });
 
-const recording = () => ({ schemaVersion: 1, provenance: 'dataset_annotations', source: { dataset: 'fixture dataset for tests' }, mapId: 'room_test', coordinateUnits: 'meters', imageSpace: 'letterboxed_square', video: { name: 'clip.mp4', width: 960, height: 600, duration: 24 }, entities: [{ id: 'keys', label: '钥匙', aliases: ['钥匙'], priority: 'explicit' }], points: [[0, 0, 0, '#aabbcc']], frames: [1, 3, 5].map((videoTime, index) => ({ videoTime, worldFromCamera: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], detections: [index === 2 ? { entityId: 'keys', status: 'not_seen' } : { entityId: 'keys', status: 'seen', bbox: [.1, .2, .3, .4], worldPosition: [index + 1, 0, 2] }] })) });
+const recording = () => ({ schemaVersion: 1, provenance: 'dataset_annotations', source: { dataset: 'fixture dataset for tests' }, mapId: 'room_test', coordinateUnits: 'meters', imageSpace: 'letterboxed_square', video: { name: 'clip.mp4', width: 960, height: 600, duration: 24 }, entities: [{ id: 'keys', label: 'Keys', aliases: ['keys'], priority: 'explicit' }], points: [[0, 0, 0, '#aabbcc']], frames: [1, 3, 5].map((videoTime, index) => ({ videoTime, worldFromCamera: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], detections: [index === 2 ? { entityId: 'keys', status: 'not_seen' } : { entityId: 'keys', status: 'seen', bbox: [.1, .2, .3, .4], worldPosition: [index + 1, 0, 2] }] })) });
 
 test('dataset import captures exact annotation frames, preserves moved history and does not expose future observations', async () => {
   const ui = await harness();
@@ -88,7 +88,7 @@ test('dataset import captures exact annotation frames, preserves moved history a
   const pack = JSON.stringify(recording());
   await ui.run(`importRecording({size:1000,text:async()=>${JSON.stringify(pack)}})`);
   assert.equal(ui.run('state.observationCount'), 0);
-  assert.match(ui.elements.get('mode-badge').textContent, /数据集标注/);
+  assert.match(ui.elements.get('mode-badge').textContent, /ANNOTATION REPLAY/);
   await ui.run('video.currentTime=4.2;processRecordingFrame()');
   assert.equal(ui.draws.at(-1), 1);
   assert.deepEqual(ui.engine.state().objects[0].lastSeen.position, [1, 0, 2]);
@@ -113,12 +113,12 @@ test('dataset import captures exact annotation frames, preserves moved history a
 
 test('dataset import rejects mismatched video and preview recognition cannot consume future annotations', async () => {
   const engine = new OfflineRun(fixture), pack = recording();
-  await assert.rejects(engine.request('recording', { sessionId: engine.state().session.id, recording: pack, video: { ...pack.video, name: 'other.mp4' } }), /不一致/);
+  await assert.rejects(engine.request('recording', { sessionId: engine.state().session.id, recording: pack, video: { ...pack.video, name: 'other.mp4' } }), /does not match/);
   const state = await engine.request('recording', { sessionId: engine.state().session.id, recording: pack, video: pack.video });
-  await assert.rejects(engine.frame({ sessionId: state.session.id, seq: 1, videoTime: .99, imageDataUrl: PNG }), /对齐/);
+  await assert.rejects(engine.frame({ sessionId: state.session.id, seq: 1, videoTime: .99, imageDataUrl: PNG }), /not aligned/);
   assert.equal(engine.state().observationCount, 0);
   await engine.frame({ sessionId: state.session.id, seq: 1, videoTime: 1, imageDataUrl: PNG });
-  await assert.rejects(engine.frame({ sessionId: state.session.id, seq: 2, videoTime: 1.01, imageDataUrl: PNG }), /已处理/);
+  await assert.rejects(engine.frame({ sessionId: state.session.id, seq: 2, videoTime: 1.01, imageDataUrl: PNG }), /already been saved/);
   assert.equal(engine.state().observationCount, 1);
 });
 
@@ -128,18 +128,18 @@ test('invisible voice loop keeps heartbeat audio active and resumes listening af
   assert.equal(ui.elements.get('app-main').inert, true);
   await ui.run('microphone()');
   assert.equal(ui.run('feedback.listening'), true);
-  ui.recognizers.at(-1).result('我要出发了');
+  ui.recognizers.at(-1).result('I am heading out');
   await new Promise(resolve => setImmediate(resolve));
   assert.equal(ui.engine.state().targetId, 'keys');
   assert.equal(ui.run('feedback.listening'), false);
   const resume = ui.timers.get(ui.run('listenTimer')); assert.equal(typeof resume, 'function'); resume();
   assert.equal(ui.run('feedback.listening'), true);
-  ui.recognizers.at(-1).result('拿到了'); await new Promise(resolve => setImmediate(resolve));
+  ui.recognizers.at(-1).result('Got it'); await new Promise(resolve => setImmediate(resolve));
   assert.equal(ui.engine.state().targetId, 'wallet');
   assert.equal(ui.engine.data.userReports[0].source, 'user_report');
-  assert.match(ui.elements.get('checklist').innerHTML, /用户已确认/);
-  await ui.run('ask("暂停")'); assert.equal(ui.run('running'), false); assert.equal(ui.run('listenWanted'), true); assert.equal(ui.run('feedback.guidance'), null);
-  await ui.run('ask("继续")'); await new Promise(resolve => setImmediate(resolve)); assert.equal(ui.run('running'), true); assert.equal(ui.run('listenWanted'), true);
+  assert.match(ui.elements.get('checklist').innerHTML, /Confirmed by you/);
+  await ui.run('ask("Pause")'); assert.equal(ui.run('running'), false); assert.equal(ui.run('listenWanted'), true); assert.equal(ui.run('feedback.guidance'), null);
+  await ui.run('ask("Continue")'); await new Promise(resolve => setImmediate(resolve)); assert.equal(ui.run('running'), true); assert.equal(ui.run('listenWanted'), true);
   const before = [...ui.engine.data.simulatedPose.worldFromCamera];
   ui.windowEvents.keydown({ key: 'ArrowRight', preventDefault() {} }); await new Promise(resolve => setImmediate(resolve));
   assert.notDeepEqual(ui.engine.data.simulatedPose.worldFromCamera, before);

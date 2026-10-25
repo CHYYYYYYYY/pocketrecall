@@ -27,8 +27,8 @@ export function recordingFixture() {
 test('recording validation enforces identity, geometry, camera pose and temporal alignment', () => {
   const pack = validateRecording(recordingFixture());
   assert.equal(recordingFrame(pack, 1).detections[0].semantics.modelPrediction, false);
-  assert.throws(() => recordingFrame(pack, .99), /未与标注对齐/, 'future annotation cannot appear early');
-  assert.throws(() => recordingFrame(pack, 2), /未与标注对齐/);
+  assert.throws(() => recordingFrame(pack, .99), /not aligned/, 'future annotation cannot appear early');
+  assert.throws(() => recordingFrame(pack, 2), /not aligned/);
   for (const change of [
     p => { p.frames[0].detections[0].worldPosition = [0, NaN, 1]; },
     p => { p.frames[0].detections[0].entityId = 'missing'; },
@@ -45,12 +45,12 @@ test('dataset replay stores 3D memory progressively with evidence, history and r
   const run = new RunSession({ dataDir, fixturePath, vision: { configured: true, analyze: () => { calls++; throw new Error('must not call model'); } }, reconstruction: { configured: false } });
   t.after(() => { run.close(); fs.rmSync(dataDir, { recursive: true, force: true }); });
   const pack = recordingFixture();
-  assert.throws(() => run.importRecording({ sessionId: run.session.id, recording: pack, video: { ...pack.video, name: 'wrong.mp4' } }), /不匹配/);
+  assert.throws(() => run.importRecording({ sessionId: run.session.id, recording: pack, video: { ...pack.video, name: 'wrong.mp4' } }), /does not match/);
   const started = run.importRecording({ sessionId: run.session.id, recording: pack, video: pack.video });
   assert.equal(started.objects[0].lastSeen, null); assert.equal(started.map.reference, true);
   assert.equal(started.recording.frameTimes.length, 3); assert.equal(started.observationCount, 0);
   const frame = videoTime => run.ingest({ sessionId: run.session.id, seq: run.session.lastSeq + 1, videoTime, imageDataUrl: PNG });
-  await assert.rejects(frame(.99), /未与标注对齐/);
+  await assert.rejects(frame(.99), /not aligned/);
   await frame(1); const first = run.state().objects[0].lastSeen;
   assert.equal(first.method, 'annotation'); assert.equal(first.evidence.synthetic, false);
   assert.deepEqual(first.position, [0,0,2]); assert.equal(first.semantics.provider, 'dataset_annotation');
@@ -68,6 +68,7 @@ test('dataset replay stores 3D memory progressively with evidence, history and r
   const reopened = new RunSession({ dataDir, fixturePath });
   t.after(() => reopened.close());
   assert.deepEqual(reopened.state().objects[0].lastSeen.position, [1,0,3]);
+  assert.equal(reopened.state().objects[0].label, '杯子', 'imported dataset labels are user content and stay unchanged');
   assert.deepEqual(reopened.state().map.points, pack.points);
   assert.equal(reopened.map(pack.mapId).poses.length, 3);
   assert.equal(reopened.map(pack.mapId).objects[0].lastSeen.id, last.lastSeen.id);

@@ -5,16 +5,16 @@ Run `npm start`, open `http://localhost:3000/run`. No package installation is ne
 ## 90-second presentation
 
 1. Start the built-in video. The page labels the RGB video, detections and geometry as synthetic. Four objects gain image evidence and coordinates.
-2. At 8 seconds the keys move. At 14 seconds a book hides them. Pause while hidden and ask “帮我找钥匙”. The last confirmed location remains available without claiming the hidden object is still there.
-3. Enable sound. Turn using ←/→, tilt using 抬头/低头, and approach using ↑. Alignment drives the haptic cue; approach increases the heartbeat gain and frequency. The virtual wearer is explicitly simulated.
-4. Click an object to inspect its evidence and saved record. Open storage and export the full JSON. Ask “我要出发了” for the last-seen checklist, which does not assert items are being carried.
-5. Enter **无屏体验**. After the initial browser audio/microphone permission, say “找钥匙”, “我要出发了”, “拿到了”, “暂停” or “继续”. A spoken confirmation is saved as a user report; the departure flow advances to the next item. Listening ducks the heartbeat instead of stopping it. Speech recognition pauses during generated speech to avoid hearing its own answer.
+2. At 8 seconds the keys move. At 14 seconds a book hides them. Pause while hidden and ask “Find my keys”. The last confirmed location remains available without claiming the hidden object is still there.
+3. Enable sound. Turn using ←/→, tilt using Look up / Look down, and approach using ↑. Alignment drives the haptic cue; approach increases the heartbeat gain and frequency. The virtual wearer is explicitly simulated.
+4. Click an object to inspect its evidence and saved record. Open storage and export the full JSON. Ask “I’m heading out” for the last-seen checklist, which does not assert items are being carried.
+5. Enter **Try it with your eyes up**. After the initial browser audio/microphone permission, say “Find my keys”, “I’m heading out”, “Got it”, “Pause” or “Continue”. A spoken confirmation is saved as a user report; the departure flow advances to the next item. Listening ducks the heartbeat instead of stopping it. Speech recognition pauses during generated speech to avoid hearing its own answer.
 
 ## Real video path
 
 Set `GEMINI_API_KEY` in ignored `.env.local`. The Run vision adapter supports four initial object categories plus up to eight user-added labels. It requires one instance per registered category and does not solve general re-identification.
 
-Video is decoded locally in the browser. A single request is allowed at a time, with a 1.5-second delay after completion; this is sampled-frame ingestion, not a hardware WebRTC/RTSP receiver. Each frame is padded to 518×518 for consistent detector boxes, VGGT intrinsics and depth sampling. Backwards seeking does not rewrite memory; “重新分析” creates a new session. The session is capped at 180 accepted frames.
+Video is decoded locally in the browser. A single request is allowed at a time, with a 1.5-second delay after completion; this is sampled-frame ingestion, not a hardware WebRTC/RTSP receiver. Each frame is padded to 518×518 for consistent detector boxes, VGGT intrinsics and depth sampling. Backwards seeking does not rewrite memory; “Start over” creates a new session. The session is capped at 180 accepted frames.
 
 An optional publicly hosted indoor camera clip is linked from [facebook/vggt](https://huggingface.co/spaces/facebook/vggt/tree/main/examples/videos). It needs browser network/CORS access. Loading failures are visible; the app does not substitute synthetic detections for it.
 
@@ -73,3 +73,11 @@ Regenerate synthetic assets with `python3 scripts/generate-run-fixture.py` using
 ## Validation status
 
 Automated tests cover occlusion, movement, evidence persistence, source separation, stale-response cancellation, relative-scale geometry, feedback monotonicity, backend API contracts and frontend orchestration. Provider calls are mocked in these tests. Real browser rendering, microphone permission, physical vibration, audible speaker output and live provider latency remain unverified in the task environment. It blocks listening on localhost (`EPERM`) and outbound DNS (`ENOTFOUND`).
+
+## Interface direction
+
+The Run experience is English by default, including spoken replies and browser speech recognition (`en-US`). Chinese aliases remain accepted by the command layer. Existing default object names are migrated without changing user-defined names or observations.
+
+The layout uses warm paper surfaces, charcoal media stages, a restrained orange accent and larger editorial type. Object thumbnails come from their actual saved evidence crops. Memory events and simulation controls expand when needed. The source and geometry provenance remain visible.
+
+Design references: [Teenage Engineering field system](https://teenage.engineering/products/field-system) for the physical instrument character, and [Linear’s interface refresh](https://linear.app/now/behind-the-latest-design-refresh) for content hierarchy and quieter supporting controls. No third-party assets or UI code were copied.

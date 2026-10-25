@@ -1,4 +1,4 @@
-const COLORS = { keys: '#d3f58c', wallet: '#e8c398', earbuds: '#c7d7ff', phone: '#9ee0d0' };
+const COLORS = { keys: '#efa57e', wallet: '#d7c8a5', earbuds: '#d9e1d1', phone: '#b8cebb' };
 export class SpatialMap {
   constructor(canvas, onSelect) {
     this.canvas = canvas; this.ctx = canvas.getContext('2d'); this.onSelect = onSelect;
@@ -56,8 +56,8 @@ export class SpatialMap {
     const size = (this.extent || 5) * .65, y = this.center[1] - (this.extent || 5) * .24;
     for (let i = -7; i <= 7; i++) {
       const v = i / 7 * size;
-      this.line([[this.center[0] - size, y, this.center[2] + v], [this.center[0] + size, y, this.center[2] + v]], '#315b452b');
-      this.line([[this.center[0] + v, y, this.center[2] - size], [this.center[0] + v, y, this.center[2] + size]], '#315b452b');
+      this.line([[this.center[0] - size, y, this.center[2] + v], [this.center[0] + size, y, this.center[2] + v]], '#a2b09514');
+      this.line([[this.center[0] + v, y, this.center[2] - size], [this.center[0] + v, y, this.center[2] + size]], '#a2b09514');
     }
     this.hits = [];
     const map = this.state?.map;
@@ -80,21 +80,21 @@ export class SpatialMap {
       const pp = this.project(p); ctx.fillStyle = '#9fc5ff'; ctx.beginPath(); ctx.arc(pp.x, pp.y, 4, 0, Math.PI * 2); ctx.fill();
       ctx.font = '8px ui-monospace, monospace'; ctx.fillStyle = '#9dbce4'; ctx.fillText('YOU', pp.x + 8, pp.y - 7);
       const target = this.state.objects.find(o => o.id === this.state.targetId)?.lastSeen;
-      if (target?.position && target.mapId === map.id) this.line([p, target.position], '#d3f58c88', 1, [3, 4]);
+      if (target?.position && target.mapId === map.id) this.line([p, target.position], '#efa57eaa', 1, [3, 4]);
     }
     for (const object of this.state.objects) {
       const last = object.lastSeen;
       if (!last?.position || last.mapId !== map.id) continue;
-      const p = this.project(last.position), color = COLORS[object.id] || '#d3f58c';
+      const p = this.project(last.position), color = COLORS[object.id] || '#d9e1d1';
       const selected = object.id === this.state.targetId;
       ctx.strokeStyle = color; ctx.lineWidth = 1; ctx.fillStyle = color;
       ctx.beginPath(); ctx.arc(p.x, p.y, selected ? 9 : 5, 0, Math.PI * 2); ctx.stroke();
       if (selected) { ctx.globalAlpha = .12; ctx.beginPath(); ctx.arc(p.x, p.y, 21, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1; }
       ctx.beginPath(); ctx.arc(p.x, p.y, 2, 0, Math.PI * 2); ctx.fill();
-      ctx.font = '10px -apple-system, sans-serif';
+      ctx.font = '11px "Helvetica Neue", sans-serif';
       const label = object.label, w = ctx.measureText(label).width;
       const offset = object.id === 'earbuds' ? -33 : -21;
-      ctx.fillStyle = '#102019e8'; ctx.fillRect(p.x - w / 2 - 6, p.y + offset - 9, w + 12, 18);
+      ctx.fillStyle = '#252c27ee'; ctx.fillRect(p.x - w / 2 - 6, p.y + offset - 9, w + 12, 18);
       ctx.strokeStyle = `${color}70`; ctx.strokeRect(p.x - w / 2 - 6, p.y + offset - 9, w + 12, 18);
       ctx.textAlign = 'center'; ctx.fillStyle = color; ctx.fillText(label, p.x, p.y + offset + 4); ctx.textAlign = 'left';
       this.hits.push({ x: p.x, y: p.y, id: object.id });
