@@ -4,6 +4,8 @@
 
 ▶ **[Concept film (1:46)](https://drive.google.com/file/d/1XA-NO-P9L9DJUAbpsXPJBeitypxOCQzd/view)** ([mp4 in repo](media/pocketrecall-concept-film.mp4)) — the product vision. Its HUD, 3D map and footage are simulated with CC0 photos ([credits](media/CREDITS.md)); the working demo is below.
 
+▶ **[Concept film (1:46)](https://drive.google.com/file/d/1XA-NO-P9L9DJUAbpsXPJBeitypxOCQzd/view)** ([mp4 in repo](media/pocketrecall-concept-film.mp4)) — the product vision. Its HUD, 3D map and footage are simulated with CC0 photos ([credits](media/CREDITS.md)); the working demo is below.
+
 ## Run
 
 Requires **Node.js 22+**.
