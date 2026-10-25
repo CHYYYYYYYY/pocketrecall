@@ -52,3 +52,24 @@ test('a partially invalid frame cannot commit any entity observation',t=>{
   const {pipeline,frame}=setup(t);frame.detections[1].semantics='bad';
   assert.throws(()=>pipeline.ingest(frame),/Semantics/);assert.equal(pipeline.store.snapshot().observations.length,0);
 });
+
+test('multi-frame reconstruction publishes geometry, poses and observations atomically', t => {
+  const { pipeline, frame } = setup(t);
+  const before = pipeline.store.snapshot();
+  const map = { id: frame.pose.mapId, units: 'meters', source: 'test_fixture', synthetic: true, points: [[0,0,0,'#ffffff']] };
+  assert.throws(() => pipeline.transaction(staged => {
+    staged.ingest(frame);
+    staged.store.saveMap(map);
+    staged.ingest({ ...frame, id: 'bad-frame', detections: [{ entityId: 'unknown', status: 'seen' }] });
+  }), /registered instance/);
+  assert.deepEqual(pipeline.store.snapshot(), before);
+  assert.equal(pipeline.currentPose, null);
+  const restarted = new SpatialPipeline({ dataDir: pipeline.dataDir });
+  assert.deepEqual(restarted.store.snapshot(), before);
+  pipeline.transaction(staged => { staged.ingest(frame); staged.store.saveMap(map); });
+  assert.equal(pipeline.store.readMap(map.id).points.length, 1);
+  assert.ok(pipeline.store.query({ entityId: 'keys' }).lastSeen.position);
+  assert.equal(pipeline.currentPose.id, frame.pose.id);
+  const earlier = new Date(Date.parse(frame.capturedAt) - 1).toISOString();
+  assert.equal(pipeline.recall('keys', { at: earlier }).lastSeen, null, 'historical recall cannot use a future sighting');
+});
