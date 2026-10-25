@@ -4,8 +4,6 @@
 
 ▶ **[Concept film (1:46)](https://drive.google.com/file/d/1XA-NO-P9L9DJUAbpsXPJBeitypxOCQzd/view)** ([mp4 in repo](media/pocketrecall-concept-film.mp4)) — the product vision. Its HUD, 3D map and footage are simulated with CC0 photos ([credits](media/CREDITS.md)); the working demo is below.
 
-▶ **[Concept film (1:46)](https://drive.google.com/file/d/1XA-NO-P9L9DJUAbpsXPJBeitypxOCQzd/view)** ([mp4 in repo](media/pocketrecall-concept-film.mp4)) — the product vision. Its HUD, 3D map and footage are simulated with CC0 photos ([credits](media/CREDITS.md)); the working demo is below.
-
 ## Run
 
 Requires **Node.js 22+**.
@@ -27,6 +25,8 @@ Open **http://localhost:3000/run**.
 4. **Your memory** reopens saved sessions. **Demo** is the separate synthetic keys/wallet scenario: use arrows / WASD to move the virtual wearer, Q / E to tilt, or say **“I'm heading out”** and **“Got it”**. Sound gives a proximity heartbeat; desktop taps are visualized.
 
 Keys stay on the server. Live sends microphone audio (generated speech in the guided demo) and video at 1 fps to Gemini; stopping it or hiding the page releases capture. Memories remain in ignored `.pocketrecall-data/`. Kitchen footage is for non-commercial research demonstration; [credits and transformations](public/assets/ledger/ATTRIBUTION.md).
+
+![Real kitchen, progressive spatial memory and four live spoken replies](docs/screenshots/kitchen-live.png)
 
 ## Your video and hardware
 

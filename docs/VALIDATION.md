@@ -32,3 +32,5 @@ The two desk runs use TUM measured depth and motion-capture poses, with a simula
 The Gemini key passed live calls and is kept only in ignored server configuration. `FAL_KEY` is absent; the real sample works without it. See [architecture and interfaces](HACKATHON.md) for the exact boundary.
 
 A repeat browser rehearsal exposed an intermittent silent response with automatic voice detection for generated clips. The generated-input path now uses explicit activity boundaries with a PCM silence tail, plus one visible reconnect/retry on failure. Natural microphone conversation keeps automatic detection. The post-change real-provider run above passed; this is not a reliability-rate measurement.
+
+The final post-change browser replay reached 02:41 with all four Live replies, 41 captures, 246 observations and 22,511 reference points, without a retry on that run. [Browser screenshot](screenshots/kitchen-live.png) and [observation record](verification/browser-kitchen.json).
