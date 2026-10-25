@@ -506,7 +506,7 @@ $('reset-map').addEventListener('click', () => map.reset());
 $('build-map').addEventListener('click', buildMap);
 $('inspect-storage').addEventListener('click', storage); $('nav-memory').addEventListener('click', library);
 $('nav-run').addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
-$('nav-about').addEventListener('click', () => dialog('A little less lost.', '<p>PocketRecall is an experiment in everyday spatial memory. It remembers where an object last appeared, with an image and a time to back it up.</p><p>Play a first-person recording. Let the memory build. Then ask for something you saw: a short voice prompt gives direction, a light tap marks alignment, and a heartbeat grows as you approach.</p><p>The page is a window into what a pair of glasses could remember. Choose <b>Try it with your eyes up</b> for the screen-free flow. Say <b>“Got it”</b> when you have the object; location alone never confirms possession.</p><p>The built-in scene and wearer are simulated. Uploaded videos use configured vision and reconstruction services, or their own imported spatial annotations.</p>'));
+$('nav-about').addEventListener('click', () => { $('service-story').scrollIntoView?.({ behavior: 'smooth', block: 'start' }); });
 $('open-settings').addEventListener('click', settings);
 $('close-detail').addEventListener('click', () => $('detail-dialog').close());
 $('add-object').addEventListener('click', () => $('add-dialog').showModal()); $('close-add').addEventListener('click', () => $('add-dialog').close());

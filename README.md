@@ -1,12 +1,12 @@
 # PocketRecall
 
-**A little less lost.** A voice-first spatial memory assistant. Watch a first-person video, remember where an object appeared, then find it through spoken directions, an alignment tap and a proximity heartbeat. The webpage simulates smart glasses and makes the memory inspectable.
+**A little less lost.** A no-app spatial memory service: your glasses notice objects, memory keeps their last-seen places, and you ask out loud when you need them. The intended experience uses voice, sound and touch. This working webpage simulates the glasses and shows the evidence behind each answer.
 
 ▶ **[Concept film (1:46)](https://drive.google.com/file/d/1XA-NO-P9L9DJUAbpsXPJBeitypxOCQzd/view)** ([mp4 in repo](media/pocketrecall-concept-film.mp4)) — the product vision. Its HUD, 3D map and footage are simulated with CC0 photos ([credits](media/CREDITS.md)); the working demo is below.
 
-## Run
+## Judges: start here
 
-Requires **Node.js 22+**.
+Requires **Node.js 22+**. The bundled demo runs **without an API key, glasses or a reconstruction server**.
 
 ```sh
 git clone https://github.com/CHYYYYYYYY/pocketrecall.git
@@ -15,7 +15,9 @@ npm ci
 npm start
 ```
 
-Open **http://localhost:3000/run**.
+Open **http://localhost:3000/run** and click **Watch kitchen + conversation**. Allow about 2–3 minutes. You will see a real kitchen video, a growing reference map, saved object locations and four spoken questions. No microphone permission is needed for this guided playback.
+
+For actual **Gemini Live** answers, create `.env.local` from [.env.example](.env.example) if it does not already exist, set `GEMINI_API_KEY`, then restart `npm start`. Without a key, replies use the same memory tools and browser speech, visibly labeled. `FAL_KEY` is optional and is **not needed** for either bundled sample.
 
 ## Try it
 
@@ -31,6 +33,12 @@ Keys stay on the server. Live sends microphone audio (generated speech in the gu
 ## Your video and hardware
 
 **Use your video** recognizes registered objects with Gemini. Automatic RGB-only reconstruction optionally needs `FAL_KEY`; overlapping VGGT windows are aligned into one relative-scale map. Without geometry, evidence is saved but no 3D directions are invented. RGB-D/SLAM and current-pose adapters are documented; physical glasses, general relocalization and arbitrary-room mapping are not deployed.
+
+## Who it is for, and what comes next
+
+We are designing for **everyday people who misplace belongings**, **older adults who want a simple spoken way to keep track of familiar items**, and **warehouse workers who regularly need to recall tools and supplies**. The promise is less searching, with an image and a time behind each remembered location. These are target use cases, not validated user-study outcomes.
+
+For **physical intelligence**, we see the same object–place–time memory becoming an interface between human observations and robot perception, spatial reasoning and assistance. Shared maps, reliable relocalization and physical execution are future integration and evaluation work. The current prototype demonstrates the memory and conversation loop.
 
 ## Verify
 
