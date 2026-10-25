@@ -1,0 +1,25 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import {createHash} from 'node:crypto';
+import {RunSession} from '../lib/run-session.mjs';
+test('review footage replays recorded model observations or runs live vision through the same geometry pipeline',async t=>{
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),'pocket-review-'));t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
+ const image=fs.readFileSync(new URL('../public/assets/demo-poster.jpg',import.meta.url));
+ fs.writeFileSync(path.join(root,'frame.jpg'),image);
+ fs.writeFileSync(path.join(root,'geometry.json'),JSON.stringify({coordinateUnits:'meters',provenance:{kind:'sensor',source:'test calibration'},pose:{mapId:'review',capturedAt:'2026-10-24T00:00:00Z',trackingState:'tracking',worldFromCamera:[1,0,0,0,0,-1,0,0,0,0,-1,0,0,0,0,1]},intrinsics:{fx:518,fy:518,cx:259,cy:259,width:518,height:518},depth:{width:8,height:8,data:Array(64).fill(2)}}));
+ fs.writeFileSync(path.join(root,'manifest.json'),JSON.stringify({source:{dataset:'Test camera recording'},video:{url:'/assets/review/desk.mp4'},entities:[{id:'cup',label:'Cup',aliases:['cup'],priority:'explicit'}],frames:[{videoTime:0,image:'frame.jpg',geometry:'geometry.json',imageSha256:createHash('sha256').update(image).digest('hex'),detections:[{entityId:'cup',status:'seen',bbox:[.4,.4,.6,.6],semantics:{provider:'gemini',execution:'recorded'}}]}]}));
+ let calls=0;
+ const run=new RunSession({dataDir:path.join(root,'data'),reviewDir:root,fixturePath:new URL('../public/assets/demo-manifest.json',import.meta.url),vision:{configured:true,model:'test',analyze:async()=>{calls++;return[{entityId:'cup',status:'seen',bbox:[.4,.4,.6,.6],semantics:{provider:'gemini'}}];}}});t.after(()=>run.close());
+ run.startReview({live:false});
+ assert.equal(run.state().observationCount,0);assert.equal(run.state().map,null);
+ assert.equal(JSON.stringify(run.state().review).includes('detections'),false);
+ await run.ingestReview({sessionId:run.session.id,seq:1,videoTime:0});
+ assert.equal(calls,0);assert.equal(run.state().objects[0].lastSeen.semantics.execution,'recorded');
+ assert.deepEqual(run.state().objects[0].lastSeen.position,[0,0,-2]);
+ run.startReview({live:true});await run.ingestReview({sessionId:run.session.id,seq:1,videoTime:0});
+ assert.equal(calls,1);assert.deepEqual(run.state().objects[0].lastSeen.position,[0,0,-2]);
+ await assert.rejects(run.ingestReview({sessionId:run.session.id,seq:2,videoTime:2}),/timestamp/i);
+});

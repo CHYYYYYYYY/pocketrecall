@@ -1,0 +1,43 @@
+{
+  "passed": true,
+  "checkedAt": "2026-10-25T00:41:52.205Z",
+  "input": "Real TUM RGB-D freiburg1_desk camera frames",
+  "vision": "live Gemini API",
+  "geometry": "measured Kinect depth + reference motion-capture poses",
+  "frames": 8,
+  "observations": 48,
+  "mapId": "tum-fr1-desk",
+  "mapRevisions": 8,
+  "points": 8464,
+  "frameProcessingMs": [
+    3481,
+    2414,
+    4690,
+    2771,
+    2366,
+    2886,
+    2585,
+    2272
+  ],
+  "agentTools": [
+    "memory.search",
+    "guidance.start"
+  ],
+  "guidance": "Turn right about 19°.",
+  "restart": "server recreated; memory/maps/evidence verified",
+  "wearer": "simulated; no physical localization claim",
+  "liveVoice": {
+    "passed": true,
+    "model": "gemini-3.8-live",
+    "transport": "real Gemini Live WebSocket; streamed PCM + JPEG",
+    "audioInput": "generated English speech, not a physical microphone",
+    "groundedInstruction": "Turn right about 19°.",
+    "inputTranscript": "Where did you last see the keyboard?",
+    "outputTranscript": "I last saw your keyboard here. Turn right about 19°.",
+    "inputAudioChunks": 30,
+    "videoFrames": 8,
+    "outputAudioBytes": 174242,
+    "firstAudioMs": 4058,
+    "totalMs": 7614
+  }
+}

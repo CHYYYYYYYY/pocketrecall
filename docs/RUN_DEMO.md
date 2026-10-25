@@ -1,6 +1,6 @@
 # PocketRecall Run console
 
-Run `npm start`, open `http://localhost:3000/run`. No package installation is needed with Node 22+. Root `/` opens the same console; `/desk` preserves the original UI.
+Run `npm start`, open `http://localhost:3000/run`. Install dependencies once with `npm ci` (Node 22+). The primary real-video / live-voice walkthrough is [HACKATHON.md](HACKATHON.md). Root `/` opens the same console; `/desk` preserves the original UI.
 
 ## 90-second presentation
 
@@ -72,7 +72,11 @@ Regenerate synthetic assets with `python3 scripts/generate-run-fixture.py` using
 
 ## Validation status
 
-Automated tests cover occlusion, movement, evidence persistence, source separation, stale-response cancellation, relative-scale geometry, feedback monotonicity, backend API contracts and frontend orchestration. Provider calls are mocked in these tests. Real browser rendering, microphone permission, physical vibration, audible speaker output and live provider latency remain unverified in the task environment. It blocks listening on localhost (`EPERM`) and outbound DNS (`ENOTFOUND`).
+See [VALIDATION.md](VALIDATION.md) for current results. Tests distinguish fixtures, provider mocks, recorded model predictions and live API calls. The local server and browser work in the current environment. Physical microphone/speaker and glasses behavior still need hardware rehearsal.
+
+## Current extensions
+
+`GET /api/run/sessions` and `POST /api/run/session/open` reopen durable archives. `POST /api/run/review` starts the real TUM sample; `/review/frame` ingests exact bundled captures. `/geometry` attaches capture-bound sensor/model geometry, `/pose` accepts fresh current localization, `/agent` runs bounded memory tools, and WebSocket `/live?sessionId=…` streams duplex voice/video. See the [contracts](HACKATHON.md#adapter-contracts).
 
 ## Interface direction
 

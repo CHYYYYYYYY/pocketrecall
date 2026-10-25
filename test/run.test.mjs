@@ -22,6 +22,68 @@ function runFixture(t, options = {}) {
   return { run, frame, dataDir };
 }
 
+test('saved sessions reopen their original history, maps, evidence and confirmations after restart', async t => {
+  const { run, frame, dataDir } = runFixture(t);
+  await frame(0); await frame(9); await frame(15);
+  const firstId = run.session.id;
+  run.query({ sessionId: firstId, text: 'Find my keys' });
+  run.query({ sessionId: firstId, text: 'Got it' });
+  const before = JSON.parse(JSON.stringify(run.export()));
+  const evidence = fs.readFileSync(run.evidence(firstId, path.basename(before.memory.observations[0].evidence.imagePath)));
+  run.start({ mode: 'video', filename: 'second-recording.mp4' });
+  const secondId = run.session.id;
+  const archive = run.listSessions();
+  assert.equal(archive.sessions.length, 2);
+  assert.equal(archive.sessions.find(s => s.id === firstId).observationCount, 12);
+  assert.equal(archive.sessions.find(s => s.id === secondId).active, true);
+  assert.equal(JSON.stringify(archive).includes(dataDir), false, 'summaries never expose local paths');
+  const restored = run.openSession({ sessionId: firstId });
+  assert.equal(restored.objects[0].latestCheck.status, 'not_seen');
+  assert.equal(restored.objects[0].lastSeen.id, before.memory.observations.findLast(o => o.entityId === 'keys' && o.status === 'seen').id);
+  assert.deepEqual(restored.confirmedIds, ['keys']);
+  const reopened = new RunSession({ dataDir, fixturePath }); t.after(() => reopened.close());
+  assert.equal(reopened.session.id, firstId);
+  assert.deepEqual(reopened.export().memory, before.memory);
+  assert.deepEqual(reopened.map('demo-room').points, before.maps[0].points);
+  assert.deepEqual(fs.readFileSync(reopened.evidence(firstId, path.basename(before.memory.observations[0].evidence.imagePath))), evidence);
+});
+
+test('missing or corrupt saved sessions cannot replace a working memory', async t => {
+  const { run, frame, dataDir } = runFixture(t); await frame(0);
+  const current = run.session.id;
+  for (const bad of ['../outside', 'f'.repeat(32)]) {
+    assert.throws(() => run.openSession({ sessionId: bad }), /session/i);
+    assert.equal(run.session.id, current);
+  }
+  const corrupt = 'a'.repeat(32); fs.mkdirSync(path.join(dataDir, corrupt));
+  fs.writeFileSync(path.join(dataDir, corrupt, 'session.json'), '{broken');
+  assert.equal(run.listSessions().sessions.length, 1);
+  assert.equal(run.listSessions().unavailableCount, 1);
+  assert.throws(() => run.openSession({ sessionId: corrupt }), /session/i);
+  assert.equal(run.session.id, current);
+  await frame(9);
+  assert.equal(run.state().observationCount, 8);
+});
+
+test('opening saved memory invalidates an outstanding recognition response', async t => {
+  let finish;
+  const { run, frame } = runFixture(t, { vision: { configured: true, model: 'test', analyze: () => new Promise(resolve => finish = resolve) } });
+  await frame(0); const savedId = run.session.id;
+  run.start({ mode: 'video' }); const pending = frame(0);
+  run.openSession({ sessionId: savedId }); finish(seen);
+  await assert.rejects(pending, /previous session/);
+  assert.equal(run.session.id, savedId);
+  assert.equal(run.state().observationCount, 4);
+  assert.equal(run.busy, null);
+});
+
+test('Run vision gives actionable billing and rate-limit failures without provider payloads', async () => {
+  for (const [status, expected] of [[402, /billing|payment/i], [429, /quota|rate/i], [401, /key|access/i]]) {
+    const client = createRunVisionClient({ apiKey: 'test-secret', fetchImpl: async () => new Response('test-secret internal provider detail', { status }) });
+    await assert.rejects(client.analyze(PNG, [{ id: 'keys', label: 'Keys' }]), error => expected.test(error.message) && !error.message.includes('test-secret') && !error.message.includes('internal provider'));
+  }
+});
+
 test('Run replay records moved objects and preserves the last seen evidence through occlusion and restart', async t => {
   const { run, frame, dataDir } = runFixture(t);
   await frame(0); const first = run.state().objects[0].lastSeen;
@@ -113,10 +175,10 @@ test('unrelated or ambiguous later video frames cannot reconfirm the target', as
 test('VGGT response aligns per-frame boxes and poses, persists a relative map, and never labels unscaled distances as meters', async t => {
   const e = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0]], k = [[300, 0, 259], [0, 300, 259], [0, 0, 1]];
   const { run, frame } = runFixture(t, { vision: { configured: true, model: 'test', analyze: async () => seen }, reconstruction: {
-    configured: true, model: 'fal-ai/vggt-1b', submit: async images => { assert.equal(images.length, 2); return 'request_1'; }, status: async () => ({ status: 'COMPLETED' }),
-    result: async () => ({ num_frames: 2, prediction_data: [{ url: 'test/0' }, { url: 'test/1' }], extrinsics: [e, e], intrinsics: [k, k] }), prediction: async () => ({ depth: Array.from({ length: 20 }, () => Array(20).fill(2)) }),
+    configured: true, model: 'fal-ai/vggt-1b', submit: async images => { assert.equal(images.length, 3); return 'request_1'; }, status: async () => ({ status: 'COMPLETED' }),
+    result: async () => ({ num_frames: 3, prediction_data: [{ url: 'test/0' }, { url: 'test/1' }, { url: 'test/2' }], extrinsics: [e, e, e], intrinsics: [k, k, k] }), prediction: async () => ({ depth: Array.from({ length: 20 }, () => Array(20).fill(2)) }),
   } });
-  run.start({ mode: 'video' }); await frame(0); await frame(2); await run.build({ sessionId: run.session.id }); await run.poll();
+  run.start({ mode: 'video' }); await frame(0); await frame(1); await frame(2); await run.build({ sessionId: run.session.id }); await run.poll();
   assert.equal(run.state().reconstruction.status, 'completed'); assert.equal(run.state().map.units, 'relative');
   assert.equal(run.state().objects[0].lastSeen.coordinateUnits, 'relative');
   run.query({ sessionId: run.session.id, text: '钥匙' });
@@ -130,7 +192,7 @@ test('VGGT response aligns per-frame boxes and poses, persists a relative map, a
 
 test('invalid VGGT frame correspondence does not mutate object positions', async t => {
   const { run, frame } = runFixture(t, { vision: { configured: true, analyze: async () => seen }, reconstruction: { configured: true, submit: async () => 'id', status: async () => ({ status: 'COMPLETED' }), result: async () => ({ num_frames: 1 }) } });
-  run.start({ mode: 'video' }); await frame(0); await frame(1); await run.build({ sessionId: run.session.id });
+  run.start({ mode: 'video' }); await frame(0); await frame(.5); await frame(1); await run.build({ sessionId: run.session.id });
   await assert.rejects(run.poll(), /does not match/); assert.equal(run.state().objects[0].lastSeen.position, null); assert.equal(run.session.job.status, 'failed');
 });
 

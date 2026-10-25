@@ -6,11 +6,13 @@ import { fileURLToPath } from 'node:url';
 import { MemoryStore } from './lib/memory.mjs';
 import { createVisionClient, validateFrameImage, VisionError } from './lib/vision.mjs';
 import { RunSession } from './lib/run-session.mjs';
+import { MemoryAgent } from './lib/memory-agent.mjs';
+import { attachLiveServer } from './lib/live-voice.mjs';
 import { createReadStream } from 'node:fs';
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const MAX_BODY_BYTES = 6 * 1024 * 1024;
-const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.ico': 'image/x-icon', '.woff2': 'font/woff2' };
+const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8', '.wav': 'audio/wav', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.ico': 'image/x-icon', '.woff2': 'font/woff2' };
 
 export function loadLocalEnv() {
   const envPath = path.join(ROOT, '.env.local');
@@ -56,8 +58,10 @@ export function createAppServer({
   vision = createVisionClient(),
   runVision,
   reconstruction,
+  liveOptions,
 } = {}) {
   const run = new RunSession({ dataDir: path.join(dataDir, 'run'), fixturePath: path.join(ROOT, 'public', 'assets', 'demo-manifest.json'), ...(runVision ? { vision: runVision } : {}), ...(reconstruction ? { reconstruction } : {}) });
+  const agent = new MemoryAgent(run);
   let inFlight = null;
   const cancelObservation = () => {
     if (inFlight) inFlight.controller.abort();
@@ -73,8 +77,9 @@ export function createAppServer({
       if (!['localhost', '127.0.0.1', '[::1]'].includes(base.hostname)) throw new VisionError('This demo only accepts localhost requests.', 403);
       const url = new URL(req.url, base);
       if (req.method === 'POST' && req.headers.origin && req.headers.origin !== base.origin) throw new VisionError('Cross-origin changes are not allowed.', 403);
-      if (req.method === 'GET' && url.pathname === '/api/run/config') return sendJson(res, 200, run.config());
+      if (req.method === 'GET' && url.pathname === '/api/run/config') return sendJson(res, 200, { ...run.config(), live });
       if (req.method === 'GET' && url.pathname === '/api/run/state') return sendJson(res, 200, run.state());
+      if (req.method === 'GET' && url.pathname === '/api/run/sessions') return sendJson(res, 200, run.listSessions());
       if (req.method === 'GET' && url.pathname === '/api/run/reconstruction') return sendJson(res, 200, await run.poll());
       if (req.method === 'GET' && url.pathname === '/api/run/export') return sendJson(res, 200, run.export());
       if (req.method === 'GET' && url.pathname === '/api/run/maps') return sendJson(res, 200, { maps: run.pipeline.store.snapshot().maps });
@@ -103,10 +108,18 @@ export function createAppServer({
       if (req.method === 'POST' && url.pathname.startsWith('/api/')) {
         const body = await readJson(req);
         if (url.pathname === '/api/run/session') return sendJson(res, 200, run.start(body));
+        if (url.pathname === '/api/run/ledger') return sendJson(res, 200, run.startLedger());
+        if (url.pathname === '/api/run/ledger/frame') return sendJson(res, 200, await run.ingestLedger(body));
+        if (url.pathname === '/api/run/review') return sendJson(res, 200, run.startReview(body));
+        if (url.pathname === '/api/run/review/frame') return sendJson(res, 200, await run.ingestReview(body));
+        if (url.pathname === '/api/run/session/open') return sendJson(res, 200, run.openSession(body));
         if (url.pathname === '/api/run/recording') return sendJson(res, 200, run.importRecording(body));
         if (url.pathname === '/api/run/search') return sendJson(res, 200, run.search(body));
         if (url.pathname === '/api/run/frame') return sendJson(res, 200, await run.ingest(body));
+        if (url.pathname === '/api/run/geometry') return sendJson(res, 200, run.attachGeometry(body));
+        if (url.pathname === '/api/run/pose') return sendJson(res, 200, run.updatePose(body));
         if (url.pathname === '/api/run/query') return sendJson(res, 200, run.query(body));
+        if (url.pathname === '/api/run/agent') return sendJson(res, 200, await agent.handle(body));
         if (url.pathname === '/api/run/register') return sendJson(res, 200, run.register(body));
         if (url.pathname === '/api/run/move') return sendJson(res, 200, run.move(body));
         if (url.pathname === '/api/run/reconstruct') return sendJson(res, 200, await run.build(body));
@@ -197,6 +210,7 @@ export function createAppServer({
       sendJson(res, status, { error: message });
     }
   });
+  const live = attachLiveServer(server, { run, agent, ...liveOptions });
   server.on('close', cancelObservation);
   server.on('close', () => run.close());
   server.store = store;

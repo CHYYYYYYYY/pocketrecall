@@ -1,0 +1,29 @@
+{
+  "passed": true,
+  "checkedAt": "2026-10-25T00:49:51.528Z",
+  "input": "Real TUM RGB-D freiburg1_desk camera frames",
+  "vision": "recorded Gemini model predictions",
+  "geometry": "measured Kinect depth + reference motion-capture poses",
+  "frames": 8,
+  "observations": 46,
+  "mapId": "tum-fr1-desk",
+  "mapRevisions": 8,
+  "points": 8464,
+  "frameProcessingMs": [
+    9,
+    17,
+    13,
+    12,
+    8,
+    40,
+    9,
+    16
+  ],
+  "agentTools": [
+    "memory.search",
+    "guidance.start"
+  ],
+  "guidance": "Turn right about 19°.",
+  "restart": "server recreated; memory/maps/evidence verified",
+  "wearer": "simulated; no physical localization claim"
+}

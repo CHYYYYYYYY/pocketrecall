@@ -10,9 +10,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - run: npm ci
       - run: npm run check
       - run: npm test
       - run: npm run demo
+      - run: npm run smoke
+      - run: npm run judge
+      - run: npm run judge:kitchen
+      - run: npm run preview:build
+      - run: git diff --exit-code -- public/pocketrecall-preview.html
       - uses: actions/upload-artifact@v4
         if: always()
         with:

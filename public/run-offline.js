@@ -122,6 +122,12 @@ export class OfflineRun {
     this.data.simulatedPose = pose; this.persist(); return { guidance: this.guidance(), pose };
   }
   async request(route, body) {
+    if (route === 'agent') return this.request('query', body);
+    if (route === 'sessions') return { preview: true, unavailableCount: 0, sessions: [{ ...this.data.session, active: true, frameCount: this.data.frameCount, observationCount: this.data.observations.length, mapCount: this.data.maps?.length || 0 }] };
+    if (route === 'session/open') {
+      if (body.sessionId !== this.data.session.id) throw new Error('The preview only keeps the current session. Use the local server for earlier memories.');
+      return this.state();
+    }
     if (route === 'config') return { vision: { configured: false, provider: 'offline_preview', model: "Synthetic observations; no API calls" }, reconstruction: { configured: false, model: "Known synthetic geometry" }, frameIntervalMs: 1500, preview: true };
     if (route === 'state' || route === 'reconstruction') return this.state();
     if (route === 'session') return this.start(body);

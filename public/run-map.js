@@ -21,8 +21,8 @@ export class SpatialMap {
   reset() { this.yaw = -.42; this.pitch = .58; this.zoom = 1; this.render(); }
   setState(state) {
     this.state = state;
-    if (state.map && this.mapId !== state.map.id) {
-      this.mapId = state.map.id;
+    if (state.map && (this.mapId !== state.map.id || this.fittedSession !== state.session?.id || this.pointCount !== state.map.points.length)) {
+      this.mapId = state.map.id; this.fittedSession = state.session?.id; this.pointCount = state.map.points.length;
       const pts = state.map.points.filter((_, i) => i % 20 === 0);
       if (pts.length) {
         const mins = [0, 1, 2].map(k => Math.min(...pts.map(p => p[k])));
@@ -62,12 +62,12 @@ export class SpatialMap {
     this.hits = [];
     const map = this.state?.map;
     if (!map) return;
-    const stride = Math.max(1, Math.ceil(map.points.length / 9500));
+    const stride = Math.max(1, Math.ceil(map.points.length / 25000));
     const dots = map.points.filter((_, i) => i % stride === 0).map(p => ({ ...this.project(p), color: p[3] || '#69bda3' })).sort((a, b) => b.z - a.z);
-    ctx.globalAlpha = .72;
+    ctx.globalAlpha = .9;
     for (const p of dots) {
       if (p.x < 0 || p.y < 0 || p.x > this.width || p.y > this.height) continue;
-      ctx.fillStyle = p.color; const s = 1.2 * Math.min(this.zoom, 1.5); ctx.fillRect(p.x, p.y, s, s);
+      ctx.fillStyle = p.color; const s = 1.7 * Math.min(this.zoom, 1.5); ctx.fillRect(p.x, p.y, s, s);
     }
     ctx.globalAlpha = 1;
     const positions = map.poses.map(p => [p.worldFromCamera[3], p.worldFromCamera[7], p.worldFromCamera[11]]);

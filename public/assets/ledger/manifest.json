@@ -1,0 +1,269 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "dataset": "LEDGER / HD-EPIC kitchen",
+    "url": "https://ledger-3d.github.io/",
+    "license": "HD-EPIC CC BY-NC 4.0; credited LEDGER research outputs",
+    "geometry": "Precomputed Pi3X + TSDF reference; progressively revealed by approximate camera frustum, not live reconstruction",
+    "coordinateUnits": "relative",
+    "camera": "Exported centers and forward vectors; roll approximated as zero",
+    "wineGlassSourceId": 39,
+    "wineGlassObservations": [
+      16.0,
+      36.0,
+      40.0,
+      92.0,
+      96.0,
+      128.0,
+      136.0,
+      144.0
+    ]
+  },
+  "video": {
+    "url": "/assets/ledger/kitchen.mp4",
+    "name": "LEDGER / HD-EPIC kitchen",
+    "duration": 160.8,
+    "width": 1408,
+    "height": 1408
+  },
+  "entities": [
+    {
+      "id": "ledger_39",
+      "label": "Wine Glass",
+      "aliases": [
+        "wine glass",
+        "glass",
+        "\u9152\u676f"
+      ],
+      "priority": "explicit"
+    },
+    {
+      "id": "ledger_0",
+      "label": "Tongs",
+      "aliases": [
+        "tongs"
+      ],
+      "priority": "background"
+    },
+    {
+      "id": "ledger_37",
+      "label": "Mug",
+      "aliases": [
+        "mug"
+      ],
+      "priority": "background"
+    },
+    {
+      "id": "ledger_77",
+      "label": "Dishwasher",
+      "aliases": [
+        "dishwasher"
+      ],
+      "priority": "background"
+    },
+    {
+      "id": "ledger_121",
+      "label": "Radiator",
+      "aliases": [
+        "radiator"
+      ],
+      "priority": "background"
+    },
+    {
+      "id": "ledger_126",
+      "label": "Plant",
+      "aliases": [
+        "plant"
+      ],
+      "priority": "background"
+    }
+  ],
+  "frames": [
+    {
+      "videoTime": 0.0,
+      "file": "capture-00.json"
+    },
+    {
+      "videoTime": 4.0,
+      "file": "capture-01.json"
+    },
+    {
+      "videoTime": 8.0,
+      "file": "capture-02.json"
+    },
+    {
+      "videoTime": 12.0,
+      "file": "capture-03.json"
+    },
+    {
+      "videoTime": 16.0,
+      "file": "capture-04.json"
+    },
+    {
+      "videoTime": 20.0,
+      "file": "capture-05.json"
+    },
+    {
+      "videoTime": 24.0,
+      "file": "capture-06.json"
+    },
+    {
+      "videoTime": 28.0,
+      "file": "capture-07.json"
+    },
+    {
+      "videoTime": 32.0,
+      "file": "capture-08.json"
+    },
+    {
+      "videoTime": 36.0,
+      "file": "capture-09.json"
+    },
+    {
+      "videoTime": 40.0,
+      "file": "capture-10.json"
+    },
+    {
+      "videoTime": 44.0,
+      "file": "capture-11.json"
+    },
+    {
+      "videoTime": 48.0,
+      "file": "capture-12.json"
+    },
+    {
+      "videoTime": 52.0,
+      "file": "capture-13.json"
+    },
+    {
+      "videoTime": 56.0,
+      "file": "capture-14.json"
+    },
+    {
+      "videoTime": 60.0,
+      "file": "capture-15.json"
+    },
+    {
+      "videoTime": 64.0,
+      "file": "capture-16.json"
+    },
+    {
+      "videoTime": 68.0,
+      "file": "capture-17.json"
+    },
+    {
+      "videoTime": 72.0,
+      "file": "capture-18.json"
+    },
+    {
+      "videoTime": 76.0,
+      "file": "capture-19.json"
+    },
+    {
+      "videoTime": 80.0,
+      "file": "capture-20.json"
+    },
+    {
+      "videoTime": 84.0,
+      "file": "capture-21.json"
+    },
+    {
+      "videoTime": 88.0,
+      "file": "capture-22.json"
+    },
+    {
+      "videoTime": 92.0,
+      "file": "capture-23.json"
+    },
+    {
+      "videoTime": 96.0,
+      "file": "capture-24.json"
+    },
+    {
+      "videoTime": 100.0,
+      "file": "capture-25.json"
+    },
+    {
+      "videoTime": 104.0,
+      "file": "capture-26.json"
+    },
+    {
+      "videoTime": 108.0,
+      "file": "capture-27.json"
+    },
+    {
+      "videoTime": 112.0,
+      "file": "capture-28.json"
+    },
+    {
+      "videoTime": 116.0,
+      "file": "capture-29.json"
+    },
+    {
+      "videoTime": 120.0,
+      "file": "capture-30.json"
+    },
+    {
+      "videoTime": 124.0,
+      "file": "capture-31.json"
+    },
+    {
+      "videoTime": 128.0,
+      "file": "capture-32.json"
+    },
+    {
+      "videoTime": 132.0,
+      "file": "capture-33.json"
+    },
+    {
+      "videoTime": 136.0,
+      "file": "capture-34.json"
+    },
+    {
+      "videoTime": 140.0,
+      "file": "capture-35.json"
+    },
+    {
+      "videoTime": 144.0,
+      "file": "capture-36.json"
+    },
+    {
+      "videoTime": 148.0,
+      "file": "capture-37.json"
+    },
+    {
+      "videoTime": 152.0,
+      "file": "capture-38.json"
+    },
+    {
+      "videoTime": 156.0,
+      "file": "capture-39.json"
+    },
+    {
+      "videoTime": 160.0,
+      "file": "capture-40.json"
+    }
+  ],
+  "dialogue": [
+    {
+      "time": 20,
+      "text": "Where did you last see the wine glass?",
+      "audio": "/assets/ledger/user-0.wav"
+    },
+    {
+      "time": 60,
+      "text": "Find the wine glass.",
+      "audio": "/assets/ledger/user-1.wav"
+    },
+    {
+      "time": 96,
+      "text": "Show the wine glass history.",
+      "audio": "/assets/ledger/user-2.wav"
+    },
+    {
+      "time": 144,
+      "text": "Find the wine glass again.",
+      "audio": "/assets/ledger/user-3.wav"
+    }
+  ]
+}
