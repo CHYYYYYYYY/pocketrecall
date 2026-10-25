@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#efeee8"><title>PocketRecall — A little less lost.</title>
+  <meta name="description" content="A first-person memory experiment. Remember where you last saw something, then follow sound and touch to find it.">
+  <link rel="stylesheet" href="/run.css">
+</head>
+<body>
+<svg class="svg-defs" xmlns="http://www.w3.org/2000/svg"><defs>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="m9 5 11 7-11 7Z"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V3m-5 5 5-5 5 5M4 16v5h16v-5"/></symbol>
+  <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="13" rx="3"/><path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3m-4 0h8"/></symbol>
+  <symbol id="i-key" viewBox="0 0 24 24"><circle cx="8" cy="8" r="5"/><path d="m12 12 9 9m-5-5 3-3m-6 0 3-3"/></symbol>
+  <symbol id="i-cube" viewBox="0 0 24 24"><path d="m12 2 9 5v10l-9 5-9-5V7Zm0 10L3 7m9 5 9-5m-9 5v10M7.5 4.5l9 5"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></symbol>
+  <symbol id="i-sound" viewBox="0 0 24 24"><path d="m11 4-6 5H2v6h3l6 5Zm4 4a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/></symbol>
+  <symbol id="i-heart" viewBox="0 0 24 24"><path d="M2 12h5l3-8 4 16 3-8h5"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-expand" viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></symbol>
+  <symbol id="i-wallet" viewBox="0 0 24 24"><path d="M20 8V4H4v16h16v-4M4 8h18v8h-8V8"/><circle cx="17" cy="12" r=".8"/></symbol>
+  <symbol id="i-buds" viewBox="0 0 24 24"><rect x="3" y="9" width="18" height="12" rx="5"/><path d="M3 14h18M6 6V3h3v5m6 0V3h3v3"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M10 5h4m-3 14h2"/></symbol>
+</defs></svg>
+<header class="topbar" id="app-header">
+  <a class="brand" href="/run" aria-label="PocketRecall home"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>PocketRecall<span class="brand-edition">FIELD NOTES / 001</span></a>
+  <nav aria-label="Main navigation"><button class="nav-active" id="nav-run">The experiment</button><button id="nav-memory">Your memory</button><button id="nav-about">About</button></nav>
+  <div class="top-actions"><span class="connection" id="connection"><i></i>On this device</span><button class="icon-button" id="fullscreen" aria-label="Enter full screen"><svg><use href="#i-expand"/></svg></button></div>
+</header>
+<main id="app-main">
+  <section class="heading">
+    <div class="heading-title"><p class="eyebrow">SPATIAL MEMORY, WITHOUT A SCREEN.</p><h1>A little less <em>lost.</em></h1></div>
+    <div class="heading-aside"><p>You put it down. Life moved on.<br>Pick up the memory when you need it.</p><button class="button accent" id="enter-invisible">Try it with your eyes up <svg><use href="#i-arrow"/></svg></button><span class="quiet-caption">Voice, a small tap, a familiar heartbeat.</span></div>
+  </section>
+
+  <section class="sourcebar" aria-label="Recording source">
+    <div class="source-title"><span class="source-dot"></span><div><b id="source-name">The desk recording</b><small id="source-caption">A 24-second simulated scene. Real memory, stored as you watch.</small></div></div>
+    <div class="source-actions"><button id="sample-button" class="button quiet">Demo</button><button id="public-sample" class="button quiet">Sample film ↗</button><button id="recording-button" class="button outline" title="Load a matching video first, then import its spatial annotation JSON">Import spatial data</button><button id="upload-button" class="button dark"><svg><use href="#i-upload"/></svg>Use your video</button><input id="video-file" type="file" accept="video/*,.mp4,.mov,.webm" hidden><input id="recording-file" type="file" accept="application/json,.json" hidden></div>
+  </section>
+
+  <section class="stage-grid" aria-label="Video and spatial memory">
+    <article class="panel video-panel">
+      <div class="panel-header"><h2><span class="section-index">01</span>Through your eyes</h2><span class="live-label" id="stream-status"><i></i>PAUSED</span></div>
+      <div class="video-stage" id="video-stage">
+        <video id="feed" preload="auto" playsinline muted poster="/assets/demo-poster.jpg" aria-label="First-person recording"></video>
+        <canvas id="detections" aria-label="Object detections for the processed frame"></canvas>
+        <div class="viewfinder top-left"></div><div class="viewfinder bottom-right"></div>
+        <div class="feed-label"><span id="feed-source">SIMULATED RECORDING</span><small id="feed-clock">00:00.0</small></div>
+        <div class="frame-label"><span id="frame-number">FRAME 000</span><span id="latency">READY</span></div>
+        <div class="video-error" id="video-error" hidden></div>
+      </div>
+      <div class="video-controls"><button id="play-button" class="play-button" aria-label="Play and observe"><svg><use href="#i-play"/></svg></button><div class="timeline-wrap"><input type="range" id="timeline" min="0" max="24" step="0.1" value="0" aria-label="Recording timeline"><div class="timeline-labels"><span id="time-label">00:00 / 00:24</span><span id="observe-label">Press play to start remembering</span></div></div><button class="button quiet small" id="restart">Start over</button></div>
+    </article>
+
+    <article class="panel map-panel">
+      <div class="panel-header"><h2><span class="section-index">02</span>A place in memory</h2><button id="reset-map" class="button quiet small">Reset view ⤾</button></div>
+      <div class="map-stage"><canvas id="space-map" tabindex="0" aria-label="3D memory. Drag to orbit, scroll to zoom. Use remembered object buttons below to select a target."></canvas><div class="map-badges"><span class="pill" id="map-source">NO MAP YET</span><span class="mono" id="point-count">0 POINTS</span></div><div class="map-bottom"><span><i class="legend-mint"></i>Scene <i class="legend-lime"></i>Objects <i class="legend-blue"></i>Path</span><small>Drag to look around</small></div><div id="map-empty" class="map-empty"><span class="map-crosshair" aria-hidden="true">+</span><b>Room to remember.</b><p>Play the demo to see the space take shape.</p></div></div>
+      <div class="map-controls"><div><b id="map-status">Waiting for a first look</b><small id="map-note">Known geometry from the simulated scene</small></div><label class="auto-map"><input id="auto-map" type="checkbox" checked>Auto</label><button class="button outline small" id="build-map">Build 3D</button></div>
+    </article>
+  </section>
+
+  <div class="process-wrap">
+    <div class="process-label"><span class="source-dot"></span>Inside the memory</div>
+    <section class="pipeline" aria-label="Memory processing steps">
+      <div class="pipeline-step" data-step="capture"><span>01</span><b>Observe</b><small id="stage-capture">Waiting for video</small></div>
+      <div class="pipeline-step" data-step="detect"><span>02</span><b>Recognize</b><small id="stage-detect">Objects & details</small></div>
+      <div class="pipeline-step" data-step="map"><span>03</span><b>Place</b><small id="stage-map">Position in space</small></div>
+      <div class="pipeline-step" data-step="store"><span>04</span><b>Remember</b><small id="stage-store">Image · place · time</small></div>
+      <div class="pipeline-step" data-step="recall"><span>05</span><b>Find</b><small id="stage-recall">Waiting for a request</small></div>
+    </section>
+  </div>
+
+  <section class="bottom-grid">
+    <article class="panel memory-panel" id="memory-panel">
+      <div class="panel-header"><h2><span class="section-index">03</span>Things you've seen</h2><button id="add-object" class="button quiet small">＋ Keep an eye on something</button></div>
+      <div class="object-grid" id="objects"></div>
+      <div class="storage-strip"><div><i></i><b id="storage-count">0</b> observations <span class="separator">/</span> <span id="storage-frames">0</span> frames <span class="separator">/</span> <span id="storage-engine">Saved on this device</span></div><button id="inspect-storage">Open the record <span>↗</span></button></div>
+      <p class="memory-proof" id="memory-proof">Every remembered place starts with an image.</p>
+      <details class="event-log"><summary class="log-heading"><span>Follow the memory trail</span><span id="event-status">NO EVENTS YET</span></summary><ol id="events" aria-label="Memory event history"></ol></details>
+    </article>
+
+    <article class="panel guidance-panel">
+      <div class="panel-header"><h2><span class="section-index">04</span>Let the sound lead.</h2><button id="sound-toggle" class="button quiet small" aria-pressed="false"><svg><use href="#i-sound"/></svg>Sound off</button></div>
+      <form class="voice-input" id="query-form"><button type="button" id="mic-button" aria-label="Speak a request"><svg><use href="#i-mic"/></svg></button><input id="query-input" maxlength="500" placeholder="Where did I leave my keys?" aria-label="What would you like to find?"><button type="submit" aria-label="Find this object"><svg><use href="#i-arrow"/></svg></button></form>
+      <div class="search-chips"><span>Try</span><button data-query="Find my keys">My keys</button><button data-query="Find my wallet">My wallet</button><button data-query="I'm heading out">I'm heading out ↗</button></div>
+      <p class="speech-note" id="speech-note">Say it out loud, or type it here.</p>
+      <div class="guide-main"><div class="direction-orb" id="direction-orb"><div class="orbit-ring"></div><div id="direction-arrow">↑</div><span id="direction-label">READY</span></div><div class="guide-copy"><span class="eyebrow" id="guide-target">A WAY BACK</span><p id="answer" aria-live="polite">What are you looking for?</p><div class="distance"><strong id="distance">—</strong><span id="distance-unit">Choose an object</span></div></div></div>
+      <div class="feedback-grid"><div><svg><use href="#i-sound"/></svg><span>Direction</span><b id="voice-feedback">Waiting</b></div><div id="haptic-tile"><span class="haptic-icon" aria-hidden="true">≋</span><span>A light tap</span><b id="haptic-feedback">Screen simulation</b></div><div><svg><use href="#i-heart"/></svg><span>Getting closer</span><b id="pulse-feedback">Sound off</b><div class="volume-track"><i id="volume-bar"></i></div></div></div>
+      <details class="movement-details"><summary>Move the simulated wearer <span>W A S D</span></summary><div class="sim-controls"><div><button data-move="left" aria-label="Turn left">←</button><button data-move="forward" aria-label="Step forward">↑</button><button data-move="back" aria-label="Step back">↓</button><button data-move="right" aria-label="Turn right">→</button><button data-move="up">Look up</button><button data-move="down">Look down</button><button data-move="reset" aria-label="Reset wearer position">⤾</button></div></div><p class="guide-note">This moves a virtual wearer. A remembered place is a starting point; finding the object still needs a look.</p></details>
+      <div id="checklist" class="checklist" hidden></div>
+    </article>
+  </section>
+  <footer><span>POCKETRECALL <i>—</i> <span class="footer-subtitle">AN EXPERIMENT IN EVERYDAY MEMORY.</span></span><div><span id="api-status">CONNECTING</span><button id="open-settings">Connections ↗</button><span class="mono" id="session-short">—</span><span id="mode-badge" class="pill">SIMULATION</span></div></footer>
+</main>
+<section id="invisible-view" class="invisible-view" hidden role="dialog" aria-modal="true" aria-label="Screen-free guidance">
+  <div class="invisible-top"><span class="brand"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>PocketRecall</span><button id="exit-invisible" class="button outline">Back to the experiment ↗</button></div>
+  <div class="invisible-center"><p class="eyebrow">YOU CAN LOOK AWAY NOW.</p><h2>Keep your eyes<br>on the <em>world.</em></h2><div class="voice-orb" id="voice-orb"><i></i><i></i><i></i><svg><use href="#i-mic"/></svg></div><p id="invisible-status" aria-live="polite">What are you looking for?</p><p id="invisible-reply">“Find my keys.” &nbsp; “I'm heading out.”</p><div class="invisible-actions"><button id="invisible-listen" class="button dark">Start talking</button><button id="invisible-confirm" class="button outline">Got it ✓</button></div></div>
+  <div class="invisible-bottom"><p>A direction. A small tap. A heartbeat that gets closer.</p><small>Wearer movement and touch are simulated. No glasses required.</small><details><summary>Try moving <span>ARROWS / W A S D · Q E TO TILT</span></summary><div class="sim-controls"><div><button data-move="left">← Turn left</button><button data-move="forward">↑ Step closer</button><button data-move="back">↓ Step back</button><button data-move="right">→ Turn right</button><button data-move="up">Look up</button><button data-move="down">Look down</button></div></div></details></div>
+</section>
+<div id="toast" role="status" hidden></div>
+<dialog id="detail-dialog"><div class="dialog-heading"><h2 id="detail-title">A memory</h2><button id="close-detail" aria-label="Close detail">✕</button></div><div id="detail-body"></div></dialog>
+<dialog id="add-dialog"><div class="dialog-heading"><h2>Keep an eye on it.</h2><button id="close-add" aria-label="Close object form">✕</button></div><form id="add-form"><label for="object-name">What should I remember?</label><input id="object-name" maxlength="60" placeholder="My water bottle" required><p>New objects are recognized in your uploaded videos. The desk demo has four fixed props.</p><button class="button accent" type="submit">Start remembering <span>↗</span></button></form></dialog>
+<script type="module" src="/run.js"></script>
+</body>
+</html>
